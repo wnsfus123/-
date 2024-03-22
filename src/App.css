@@ -1,0 +1,52 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+ }
+ 
+ .header {
+  background-color: #021429;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+ }
+ 
+ .logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 로고를 가운데에 배치 */
+ }
+ 
+ .nav-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end; /* 버튼을 오른쪽으로 배치 */
+ }
+ 
+ .main-content {
+  flex-grow: 1;
+  background-color: white;
+  padding: 20px;
+ }
+ 
+ .footer {
+  height: 100px;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+ }
+ 
+ .logo {
+  width: 75px;
+  height: 75px;
+  object-fit: cover; /* 이미지의 비율을 유지하면서 크기를 조정합니다. */
+  display: flex;
+  align-items: center;
+ }
+
+ .schedule-container {
+  width: 200px; /* 원하는 너비로 조정 */
+  height: 200px; /* 원하는 높이로 조정 */
+ }
