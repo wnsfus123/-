@@ -1,34 +1,67 @@
 ﻿const express = require('express');
 const path = require('path');
+const mysql = require('mysql');
+const bodyParser = require('body-parser');
+const moment = require('moment');
 const app = express();
 const http = require('http').createServer(app);
-const axios = require('axios'); // axios 라이브러리 임포트
 
-// 8080번 포트에서 서버를 실행
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '1234',
+  database: 'mysql'
+});
+
+connection.connect(err => {
+  if (err) {
+    console.error('Error connecting to MySQL database:', err.stack);
+    return;
+  }
+  console.log('Connected to MySQL database');
+});
+
 http.listen(8080, () => {
   console.log("Listening on http://localhost:8080/");
 });
 
 app.use(express.static(path.join(__dirname, '/build')));
 
-// 메인페이지 접속 시 build 폴더의 index.html 보내기
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '/build/index.html'));
+app.post("/api/events", (req, res) => {
+  const { eventName, day, time } = req.body;
+
+  // 날짜와 시간 결합하여 datetime 형식으로 변환
+  const eventDateTime = moment(`${day} ${time}`, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
+
+  const eventData = {
+    uuid: generateUUID(), // UUID 생성 로직
+    eventname: eventName,
+    day: eventDateTime
+  };
+
+  connection.query('INSERT INTO test SET ?', eventData, (error, results, fields) => {
+    if (error) {
+      console.error('Error inserting event:', error);
+      res.status(500).send('Error inserting event');
+      return;
+    }
+    console.log('Event added successfully');
+    console.log('Event Name:', eventName);
+    console.log('day:', eventDateTime);
+    
+    res.status(200).send('Event added successfully');
+  });
 });
 
-// POST 요청 처리
-app.post('/api/saveDateTime', (req, res) => {
-  // 여기에 POST 요청을 처리하는 코드 작성
-  // 예시로 Axios를 사용하여 POST 요청을 다른 서버로 전송하는 코드를 작성하겠습니다.
-  axios.post('http://localhost:8080/api/saveDateTime', {
-    // 여기에 전송할 데이터를 넣어주세요
-  })
-  .then(response => {
-    console.log('Data saved successfully:', response.data);
-    res.status(200).send('Data saved successfully');
-  })
-  .catch(error => {
-    console.error('Error saving data:', error);
-    res.status(500).send('Error saving data');
-  });
+
+function generateUUID() {
+  // Implement your UUID generation logic here
+  // For simplicity, you can use libraries like 'uuid' or generate a UUID manually
+}
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '/build/index.html'));
 });
