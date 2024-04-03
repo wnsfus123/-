@@ -1,25 +1,13 @@
-<<<<<<< Updated upstream
-import React from 'react';
-import ScheduleSelector from 'react-schedule-selector';
-import './App.css'; // 스타일 파일 임포트
-=======
 import React from "react";
 import "./App.css"; // 스타일 파일 임포트
 import { DatePicker, TimePicker, Button, Form, Input} from 'antd'; // DatePicker, TimePicker 및 Button import 추가
 
->>>>>>> Stashed changes
 
 class App extends React.Component {
  constructor(props) {
     super(props);
     this.state = { schedule: [] };
     this.handleChange = this.handleChange.bind(this);
-<<<<<<< Updated upstream
-    this.renderCustomDateCell = this.renderCustomDateCell.bind(this);
- }
-
- handleChange(newSchedule) {
-=======
     this.handleStartTimeChange = this.handleStartTimeChange.bind(this);
     this.handleEndTimeChange = this.handleEndTimeChange.bind(this);
     this.handleDateChange = this.handleDateChange.bind(this); // DatePicker의 선택한 날짜를 처리하는 핸들러 추가
@@ -29,21 +17,9 @@ class App extends React.Component {
 
 
   handleChange(newSchedule) {
->>>>>>> Stashed changes
     this.setState({ schedule: newSchedule });
  }
 
-<<<<<<< Updated upstream
- renderCustomDateCell(time, selected, innerRef) {
-    return (
-      <div style={{ textAlign: 'center' }} ref={innerRef}>
-        {selected ? '✅' : '❌'}
-      </div>
-    );
- }
-
- render() {
-=======
   handleStartTimeChange(time) {
     this.setState({ startTime: time });
   }
@@ -90,7 +66,6 @@ class App extends React.Component {
   render() {
 
     
->>>>>>> Stashed changes
     return (
       <div className="App">
         <header className="header">
@@ -105,18 +80,6 @@ class App extends React.Component {
 
         <main className="main-content">
           <h1>Availability Selector</h1>
-<<<<<<< Updated upstream
-          <ScheduleSelector
-            selection={this.state.schedule}
-            numDays={3}
-            minTime={8}
-            maxTime={22}
-            startDate={new Date('Fri May 18 2018 17:57:06 GMT-0700 (PDT)')}
-            dateFormat="ddd M/D"
-            renderDateCell={this.renderCustomDateCell}
-            onChange={this.handleChange}
-          />
-=======
           <Form.Item
             label="Event Name"
             name="eventName"
@@ -172,7 +135,6 @@ class App extends React.Component {
           </div>
          
 
->>>>>>> Stashed changes
         </main>
 
         <footer className="footer">
