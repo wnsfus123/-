@@ -2,7 +2,7 @@
 const path = require('path');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const app = express();
 const http = require('http').createServer(app);
 
@@ -15,7 +15,8 @@ const connection = mysql.createConnection({
   password: '1234',
   database: 'mysql'
 });
-
+// 서버의 시간대를 한국 시간대로 설정
+moment.tz.setDefault('Asia/Seoul');
 connection.connect(err => {
   if (err) {
     console.error('Error connecting to MySQL database:', err.stack);
@@ -29,6 +30,8 @@ http.listen(3000, () => {
 });
 
 app.use(express.static(path.join(__dirname, '/build')));
+
+
 
 app.post("/api/events", (req, res) => {
   const { eventName, startDay, endDay, startTime, endTime } = req.body;
@@ -61,6 +64,7 @@ app.post("/api/events", (req, res) => {
       res.status(200).send('Event added successfully');
   });
 });
+
 
 
 function generateUUID() {

@@ -2,6 +2,9 @@ import React from "react";
 import "./App.css"; 
 import { DatePicker, TimePicker, Button, Form, Input } from 'antd'; 
 import axios from 'axios';
+import moment from 'moment-timezone';
+
+moment.tz.setDefault('Asia/Seoul');
 
 class App extends React.Component {
   constructor(props) {
@@ -46,12 +49,15 @@ class App extends React.Component {
     // 시작 및 종료 시간 문자열 생성
     const startTimeStr = startTime.format('HH:mm');
     const endTimeStr = endTime.format('HH:mm');
+    // 클라이언트의 시간대로 변환하여 서버로 전송
+    const startDayLocal = startDay.format('YYYY-MM-DD');
+    const endDayLocal = endDay.format('YYYY-MM-DD');
 
     // 시작일과 종료일을 서버로 전송
     axios.post('/api/events', {
         eventName: eventName,
-        startDay: startDay,
-        endDay: endDay,
+        startDay: startDayLocal,
+        endDay: endDayLocal,
         startTime: startTimeStr,
         endTime: endTimeStr,
     })
