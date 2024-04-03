@@ -33,30 +33,41 @@ class App extends React.Component {
   handleConfirm() {
     const { startTime, endTime, selectedDates, eventName } = this.state;
 
-    selectedDates.forEach(selectedDateStr => {
-      const day = selectedDateStr;
-      const startTimeStr = startTime.format('HH:mm');
-      const endTimeStr = endTime.format('HH:mm');
+    // 최소한 두 개 이상의 날짜가 선택되었는지 확인
+    if (selectedDates.length < 2) {
+        console.error('At least two dates should be selected');
+        return;
+    }
 
-      axios.post('/api/events', {
+    // 첫 번째와 두 번째 날짜 선택
+    const startDay = selectedDates[0];
+    const endDay = selectedDates[1];
+    
+    // 시작 및 종료 시간 문자열 생성
+    const startTimeStr = startTime.format('HH:mm');
+    const endTimeStr = endTime.format('HH:mm');
+
+    // 시작일과 종료일을 서버로 전송
+    axios.post('/api/events', {
         eventName: eventName,
-        day: day,
-        time: startTimeStr,
-      })
-      .then(response => {
+        startDay: startDay,
+        endDay: endDay,
+        startTime: startTimeStr,
+        endTime: endTimeStr,
+    })
+    .then(response => {
         console.log('Data sent successfully:', response.data);
-      })
-      .catch(error => {
+    })
+    .catch(error => {
         console.error('Error sending data:', error);
-      });
-
-      console.log('Event Name:', eventName);
-      console.log('Selected Date:', selectedDateStr);
-      console.log('Selected Start Time:', startTimeStr);
-      console.log('Selected End Time:', endTimeStr);
-      console.log('');
     });
-  }
+
+    console.log('Event Name:', eventName);
+    console.log('Start Day:', startDay);
+    console.log('End Day:', endDay);
+    console.log('Selected Start Time:', startTimeStr);
+    console.log('Selected End Time:', endTimeStr);
+}
 
   render() {
     return (

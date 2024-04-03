@@ -24,35 +24,41 @@ connection.connect(err => {
   console.log('Connected to MySQL database');
 });
 
-http.listen(8080, () => {
+http.listen(3000, () => {
   console.log("Listening on http://localhost:8080/");
 });
 
 app.use(express.static(path.join(__dirname, '/build')));
 
 app.post("/api/events", (req, res) => {
-  const { eventName, day, time } = req.body;
+  const { eventName, startDay, endDay, startTime, endTime } = req.body;
 
-  // 날짜와 시간 결합하여 datetime 형식으로 변환
-  const eventDateTime = moment(`${day} ${time}`, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
+  // 각 날짜 및 시간을 결합하여 datetime 형식으로 변환
+  const startDateTime = moment(`${startDay} ${startTime}`, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
+  const endDateTime = moment(`${endDay} ${endTime}`, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
 
+  // 이벤트 데이터 생성
   const eventData = {
-    uuid: generateUUID(), // UUID 생성 로직
-    eventname: eventName,
-    day: eventDateTime
+      eventname: eventName,
+      day: startDateTime,
+      time: endDateTime
   };
 
+  // 데이터베이스에 이벤트 추가
   connection.query('INSERT INTO test SET ?', eventData, (error, results, fields) => {
-    if (error) {
-      console.error('Error inserting event:', error);
-      res.status(500).send('Error inserting event');
-      return;
-    }
-    console.log('Event added successfully');
-    console.log('Event Name:', eventName);
-    console.log('day:', eventDateTime);
-    
-    res.status(200).send('Event added successfully');
+      if (error) {
+          console.error('Error inserting event:', error);
+          res.status(500).send('Error inserting event');
+          return;
+      }
+
+      console.log('Event added successfully');
+      console.log('Event Name:', eventName);
+      console.log('Start Date Time:', startDateTime);
+      console.log('End Date Time:', endDateTime);
+
+      // 응답 전송
+      res.status(200).send('Event added successfully');
   });
 });
 
