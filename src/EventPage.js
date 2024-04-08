@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 
-const EventPage = () => {
+function EventPage() {
   const { uuid } = useParams();
   const [eventData, setEventData] = useState(null);
 

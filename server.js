@@ -32,7 +32,9 @@ http.listen(8080, () => {
 
 app.use(express.static(path.join(__dirname, '/build')));
 
-
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '/build/index.html'));
+});
 
 app.post("/api/events", (req, res) => {
   const { eventName, startDay, endDay, startTime, endTime } = req.body;
@@ -102,6 +104,6 @@ function generateUUID() {
   return uuid.v4().slice(0, 6); // UUID 생성 후 앞 6글자 반환
 }
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '/build/index.html'));
+app.get('*', function (요청, 응답) {
+  응답.sendFile(path.join(__dirname, '/build/index.html'));
 });
