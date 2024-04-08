@@ -32,6 +32,10 @@ http.listen(8080, () => {
 
 app.use(express.static(path.join(__dirname, '/build')));
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '/build/index.html'));
+});
+
 app.post("/api/events", (req, res) => {
   const { eventName, startDay, endDay, startTime, endTime } = req.body;
 
@@ -63,18 +67,12 @@ app.post("/api/events", (req, res) => {
       console.log('Start Date Time:', startDateTime);
       console.log('End Date Time:', endDateTime);
 
-      // 클라이언트에게 UUID를 응답으로 보냄
-      res.status(200).json({ uuid: eventUUID });
+      // 응답 전송
+      res.status(200).send('Event added successfully');
   });
 });
 
-app.get("/events", (req, res) => {
-  // 이벤트 데이터가 있는 빈 배열을 반환하거나, 데이터베이스에서 이벤트 데이터를 가져올 수 있습니다.
-  const emptyEventData = [];
-  res.status(200).json(emptyEventData);
-});
-
-app.get("/events/:uuid", (req, res) => {
+app.get("/api/events/:uuid", (req, res) => {
   const { uuid } = req.params;
 
   // 데이터베이스에서 해당 UUID에 해당하는 이벤트를 가져옴
@@ -91,18 +89,21 @@ app.get("/events/:uuid", (req, res) => {
     }
 
     const eventData = results[0];
-    // moment.js를 사용하여 날짜 데이터 형식을 변경
-    eventData.day = moment(eventData.day).format('YYYY-MM-DD HH:mm:ss');
-    eventData.time = moment(eventData.time).format('YYYY-MM-DD HH:mm:ss');
-    
-    res.status(200).json(eventData);
+    res.status(200).json({
+      uuid: eventUUID,
+      eventname: eventName,
+      day: startDateTime,
+      time: endDateTime
+    });
   });
 });
+
+
 
 function generateUUID() {
   return uuid.v4().slice(0, 6); // UUID 생성 후 앞 6글자 반환
 }
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '/build/index.html'));
+app.get('*', function (요청, 응답) {
+  응답.sendFile(path.join(__dirname, '/build/index.html'));
 });
