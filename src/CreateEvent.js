@@ -1,10 +1,8 @@
-// App.js
-
 import React from "react";
 import "./App.css";
 import { DatePicker, TimePicker, Button, Form, Input } from "antd";
 import axios from 'axios';
-
+import { v4 as uuidv4 } from 'uuid'; // UUID 라이브러리에서 v4 함수를 가져옴
 
 class CreateEvent extends React.Component {
   constructor(props) {
@@ -49,6 +47,12 @@ class CreateEvent extends React.Component {
     // 시작 및 종료 시간 문자열 생성
     const startTimeStr = startTime.format("HH:mm");
     const endTimeStr = endTime.format("HH:mm");
+
+    // 8자리 UUID 생성
+    const eventUUID = uuidv4().substring(0, 8);
+
+    
+
     // 클라이언트의 시간대로 변환하여 서버로 전송
     const startDayLocal = startDay.format("YYYY-MM-DD");
     const endDayLocal = endDay.format("YYYY-MM-DD");
@@ -56,6 +60,7 @@ class CreateEvent extends React.Component {
     // 시작일과 종료일을 서버로 전송
     axios
       .post("/api/events", {
+        uuid: eventUUID,
         eventName: eventName,
         startDay: startDayLocal,
         endDay: endDayLocal,
@@ -64,11 +69,14 @@ class CreateEvent extends React.Component {
       })
       .then((response) => {
         console.log("Data sent successfully:", response.data);
+        window.location.href = `http://localhost:8080/test/?key=${eventUUID}`;
       })
+      
       .catch((error) => {
         console.error("Error sending data:", error);
       });
 
+    console.log("Event UUID:", eventUUID);
     console.log("Event Name:", eventName);
     console.log("Start Day:", startDay);
     console.log("End Day:", endDay);

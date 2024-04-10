@@ -13,6 +13,7 @@ const App = () => {
         <Routes> 
           <Route path="/" element={<CreateEvent />} />
           <Route path="/test" element={<EventPage />} />
+          <Route path="/test/:uuid" element={<EventPage />} />
         </Routes>
       </div>
   );

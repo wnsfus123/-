@@ -13,6 +13,8 @@ ReactDOM.render(
         </Route>
         <Route path="/test" element={ <EventPage /> }>
         </Route>
+        <Route path="/test/uuid" element={ <EventPage /> }>
+        </Route>
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,
