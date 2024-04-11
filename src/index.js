@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from './App';
 import './index.css';
 import EventPage from './EventPage'
+import TimeTest from "./TimeTest";
 
 ReactDOM.render(
   <React.StrictMode>
@@ -14,6 +15,8 @@ ReactDOM.render(
         <Route path="/test" element={ <EventPage /> }>
         </Route>
         <Route path="/test/uuid" element={ <EventPage /> }>
+        </Route>
+        <Route path="/time" element={ <TimeTest /> }>
         </Route>
       </Routes>
     </BrowserRouter>

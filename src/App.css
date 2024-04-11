@@ -1,3 +1,7 @@
+@import '~antd/dist/antd.css'; 
+
+
+
 .App {
   display: flex;
   flex-direction: column;
