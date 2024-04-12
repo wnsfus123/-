@@ -73,8 +73,9 @@ function EventPage() {
   const endDate = moment(eventData.time).format("YYYY-MM-DD");
   const startTime = moment(eventData.day).format("HH:mm");
   const endTime = moment(eventData.time).format("HH:mm");
-  const Schedule_Start = moment(eventData.day, "YYYY-MM-DD").toDate();
-  const Schedule_End = moment(eventData.time, "YYYY-MM-DD").toDate();
+  const Schedule_Start = moment(eventData.day).toDate(); // 시작일의 시간 정보를 포함하여 moment 객체로 변환합니다.
+  const Schedule_End = moment(eventData.time).toDate(); // 종료일의 시간 정보를 포함하여 moment 객체로 변환합니다.
+
 
   return (
     <div className="App">
