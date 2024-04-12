@@ -1,8 +1,14 @@
 import React from "react";
 import "./App.css";
-import { DatePicker, TimePicker, Button, Form, Input } from "antd";
+import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input } from "antd";
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid'; // UUID 라이브러리에서 v4 함수를 가져옴
+import koKR from 'antd/lib/locale/ko_KR';
+import 'dayjs/locale/ko';
+import dayjs from 'dayjs';
+
+dayjs.locale('ko');
+
 
 class CreateEvent extends React.Component {
   constructor(props) {
@@ -51,8 +57,6 @@ class CreateEvent extends React.Component {
     // 8자리 UUID 생성
     const eventUUID = uuidv4().substring(0, 8);
 
-    
-
     // 클라이언트의 시간대로 변환하여 서버로 전송
     const startDayLocal = startDay.format("YYYY-MM-DD");
     const endDayLocal = endDay.format("YYYY-MM-DD");
@@ -71,7 +75,6 @@ class CreateEvent extends React.Component {
         console.log("Data sent successfully:", response.data);
         window.location.href = `http://localhost:8080/test/?key=${eventUUID}`;
       })
-      
       .catch((error) => {
         console.error("Error sending data:", error);
       });
@@ -83,62 +86,86 @@ class CreateEvent extends React.Component {
     console.log("Selected Start Time:", startTimeStr);
     console.log("Selected End Time:", endTimeStr);
   }
+  
+ 
 
   render() {
     return (
+      
+      <div className="App">
+        <header className="header">
+          <div className="logo-container">
+            <img src="logo.png" alt="모일까 로고" className="logo" />
+          </div>
+          <div className="nav-buttons">
+            <button>로그인</button>
+            <button>회원가입</button>
+          </div>
+        </header>
+        <main className="main-content">
+          <h1>Availability Selector</h1>
+          <Form.Item
+            label="이벤트 이름"
+            name="eventName"
+            rules={[{ required: true, message: "이벤트 이름을 입력해주세요" }]}
+          >
+            <Input onChange={this.handleEventNameChange} />
+          </Form.Item>
+          <div className="date-time-picker">
+          <ConfigProvider locale={koKR}>
 
-        <div className="App">
-          <header className="header">
-            <div className="logo-container">
-              <img src="logo.png" alt="모일까 로고" className="logo" />
-            </div>
-            <div className="nav-buttons">
-              <button>로그인</button>
-              <button>회원가입</button>
-            </div>
-          </header>
+            <DatePicker.RangePicker
+              //locale={koKR}
+              format="YYYY년 MM월 DD일"
+              onChange={(dates) => {
+                this.setState({ selectedDates: dates });
+              }}
+              placeholder={['시작 날짜', '종료 날짜']} // placeholder 변경
+              // renderExtraFooter={() => (
+              //   <span>일</span>
+              // )}
+            />
 
-          <main className="main-content">
-            <h1>Availability Selector</h1>
-            <Form.Item
-              label="Event Name"
-              name="eventName"
-              rules={[{ required: true, message: "Please input an event name" }]}
-            >
-              <Input onChange={this.handleEventNameChange} />
+            <TimePicker
+              //locale={ko}
+              format="HH시 mm분"
+              onChange={this.handleStartTimeChange}
+              placeholder="시작 시간"
+              minuteStep={30} // 분 단위 30분 간격으로 변경
+               // 한국어 로케일 적용
+            />
+            <TimePicker
+              //locale={ko}
+              format="HH시 mm분"
+              onChange={this.handleEndTimeChange}
+              placeholder="종료 시간"
+              minuteStep={30} // 분 단위 30분 간격으로 변경
+               // 한국어 로케일 적용
+            />
+            </ConfigProvider>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                onClick={this.handleConfirm}
+                disabled={
+                  !this.state.selectedDates.length ||
+                  !this.state.startTime ||
+                  !this.state.endTime ||
+                  !this.state.eventName
+                }
+              >
+                확인
+              </Button>
             </Form.Item>
-            <div className="date-time-picker">
-              <DatePicker.RangePicker
-                format="YYYY-MM-DD"
-                onChange={(dates) => {
-                  this.setState({ selectedDates: dates });
-                }}
-              />
-              <TimePicker format="HH:mm" onChange={this.handleStartTimeChange} placeholder="Start Time" />
-              <TimePicker format="HH:mm" onChange={this.handleEndTimeChange} placeholder="End Time" />
-              <Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  onClick={this.handleConfirm}
-                  disabled={
-                    !this.state.selectedDates.length ||
-                    !this.state.startTime ||
-                    !this.state.endTime ||
-                    !this.state.eventName
-                  }
-                >
-                  Confirm
-                </Button>
-              </Form.Item>
-            </div>
-          </main>
+          </div>
+        </main>
+ 
 
-          <footer className="footer">
-            <p>© 2024 모일까. All rights reserved.</p>
-          </footer>
-        </div>
-       
+        <footer className="footer">
+          <p>© 2024 모일까. All rights reserved.</p>
+        </footer>
+      </div>
     );
   }
 }
