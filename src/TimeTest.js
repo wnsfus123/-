@@ -1,13 +1,7 @@
-import React from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
+import Select from 'react-select';
 
+export default function TimeTest() {
+    
+            }
 
-function TimeTest() {
-  return (
-    <div>
-      <h1>My Component</h1>
-
-    </div>
-  );
-}
-
-export default TimeTest;

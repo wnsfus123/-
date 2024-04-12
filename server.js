@@ -68,6 +68,33 @@ app.post("/api/events", (req, res) => {
   });
 });
 
+app.post("/api/save-event-schedule", (req, res) => {
+  const { user_id, event_name, event_uuid, event_datetime } = req.body;
+
+  const eventData = {
+    user_id: user_id,
+    event_name: event_name,
+    event_uuid: event_uuid,
+    event_datetime: event_datetime
+  };
+
+  connection.query('INSERT INTO EventSchedule SET ?', eventData, (error, results, fields) => {
+    if (error) {
+      console.error('이벤트 스케줄 추가 중 오류 발생:', error);
+      res.status(500).send('이벤트 스케줄 추가 중 오류 발생');
+      return;
+    }
+
+    console.log('이벤트 스케줄이 성공적으로 추가되었습니다.');
+    console.log('User ID:', user_id);
+    console.log('이벤트 이름:', event_name);
+    console.log('이벤트 UUID:', event_uuid);
+    console.log('이벤트 일시:', event_datetime);
+
+    res.status(200).send('이벤트 스케줄이 성공적으로 추가되었습니다.');
+  });
+});
+
 app.get("/api/events/:uuid", (req, res) => {
   const { uuid } = req.params;
 

@@ -6,9 +6,9 @@ import ScheduleSelector from "react-schedule-selector";
 
 function EventPage() {
   const [eventData, setEventData] = useState(null);
-  const [selectedStartTime, setSelectedStartTime] = useState(null);
-  const [selectedEndTime, setSelectedEndTime] = useState(null);
+  const [selectedTime, setSelectedTime] = useState([]); // 선택된 시간을 배열로 관리합니다.
   const [schedule, setSchedule] = useState([]);
+  const [numDays, setNumDays] = useState(1); 
 
   useEffect(() => {
     const queryString = window.location.search;
@@ -19,6 +19,10 @@ function EventPage() {
       .get(`/api/events/${uuid}`)
       .then((response) => {
         setEventData(response.data);
+        const startDate = moment(response.data.day);
+        const endDate = moment(response.data.time);
+        const diffDays = endDate.diff(startDate, "days") + 1;
+        setNumDays(diffDays);
       })
       .catch((error) => {
         console.error("Error fetching event data:", error);
@@ -26,11 +30,39 @@ function EventPage() {
   }, []);
 
   const handleConfirm = () => {
-    // 선택된 시작 시간과 끝 시간을 콘솔에 출력합니다.
-    console.log("Selected Start Time:", selectedStartTime);
-    console.log("Selected End Time:", selectedEndTime);
+    // 선택된 시간을 서버로 보내어 데이터베이스에 저장합니다.
+    Object.entries(selectedTime).forEach(([date, times]) => {
+      times.forEach((time) => {
+        const datetime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm").format();
+        const requestData = {
+          user_id: 1, // 예시로 사용자 ID를 1로 지정합니다. 실제로는 사용자의 ID를 지정해야 합니다.
+          event_name: eventData.eventname,
+          event_uuid: eventData.uuid,
+          event_datetime: datetime
+        };
+        axios.post("/api/save-event-schedule", requestData)
+          .then((response) => {
+            console.log("Event schedule saved successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error saving event schedule:", error);
+          });
+      });
+    });
+  };
 
-    // 이후에는 선택된 시간을 서버로 보내서 처리할 수 있습니다.
+  const handleScheduleChange = (newSchedule) => {
+    setSchedule(newSchedule);
+    // 선택된 시간을 각 날짜별로 묶어서 저장합니다.
+    const selectedTimeByDate = {};
+    newSchedule.forEach((time) => {
+      const date = moment(time).format("YYYY-MM-DD");
+      if (!selectedTimeByDate[date]) {
+        selectedTimeByDate[date] = [];
+      }
+      selectedTimeByDate[date].push(moment(time).format("HH:mm"));
+    });
+    setSelectedTime(selectedTimeByDate);
   };
 
   if (!eventData) {
@@ -41,6 +73,8 @@ function EventPage() {
   const endDate = moment(eventData.time).format("YYYY-MM-DD");
   const startTime = moment(eventData.day).format("HH:mm");
   const endTime = moment(eventData.time).format("HH:mm");
+  const Schedule_Start = moment(eventData.day, "YYYY-MM-DD").toDate();
+  const Schedule_End = moment(eventData.time, "YYYY-MM-DD").toDate();
 
   return (
     <div className="App">
@@ -55,6 +89,11 @@ function EventPage() {
       </header>
 
       <main className="main-content">
+
+
+
+
+        
         <h1>Event Details</h1>
         <h2>Event Name: {eventData.eventname}</h2>
         <h2>Event UUID: {eventData.uuid}</h2>
@@ -64,18 +103,31 @@ function EventPage() {
         <p>End Time: {endTime}</p>
         <ScheduleSelector
           selection={schedule}
-          numDays={3}
+          numDays={numDays}
+          startDate={Schedule_Start}
+          endDate={Schedule_End}
           minTime={moment(startTime, "HH:mm").hours()}
           maxTime={moment(endTime, "HH:mm").hours()}
-          onChange={(newSchedule) => {
-            setSchedule(newSchedule);
-            setSelectedStartTime(newSchedule.length > 0 ? newSchedule[0] : null);
-            setSelectedEndTime(newSchedule.length > 0 ? newSchedule[newSchedule.length - 1] + 1 : null);
+          hourlyChunks={2}
+          rowGap="0px"
+          onChange={handleScheduleChange}
+          renderTimeLabel={(time) => {
+            const formattedStartTime = moment(time).format("HH:mm");
+            const formattedEndTime = moment(time).add(30, "minutes").format("HH:mm");
+            return <div>{formattedStartTime} - {formattedEndTime}</div>;
           }}
         />
         <Button type="primary" onClick={handleConfirm}>
           Confirm
         </Button>
+        {/* 선택된 시간을 날짜와 시간으로 표시합니다. */}
+        {Object.entries(selectedTime).map(([date, times]) => (
+          <div key={date}>
+            {times.map((time) => (
+              <p key={time}>{date} {time}</p>
+            ))}
+          </div>
+        ))}
       </main>
 
       <footer className="footer">
