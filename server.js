@@ -69,10 +69,11 @@ app.post("/api/events", (req, res) => {
 });
 
 app.post("/api/save-event-schedule", (req, res) => {
-  const { user_id, event_name, event_uuid, event_datetime } = req.body;
+  const { user_id, user_pw, event_name, event_uuid, event_datetime } = req.body;
 
   const eventData = {
     user_id: user_id,
+    user_pw: user_pw,
     event_name: event_name,
     event_uuid: event_uuid,
     event_datetime: event_datetime
@@ -87,6 +88,7 @@ app.post("/api/save-event-schedule", (req, res) => {
 
     console.log('이벤트 스케줄이 성공적으로 추가되었습니다.');
     console.log('User ID:', user_id);
+    console.log('User ID:', user_pw);
     console.log('이벤트 이름:', event_name);
     console.log('이벤트 UUID:', event_uuid);
     console.log('이벤트 일시:', event_datetime);

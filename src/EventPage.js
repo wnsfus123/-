@@ -34,8 +34,7 @@ function EventPage() {
     Object.entries(selectedTime).forEach(([date, times]) => {
       times.forEach((time) => {
         const datetime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm").format();
-        const requestData = {
-          user_id: 1, // 예시로 사용자 ID를 1로 지정합니다. 실제로는 사용자의 ID를 지정해야 합니다.
+        const requestData = {         
           event_name: eventData.eventname,
           event_uuid: eventData.uuid,
           event_datetime: datetime
@@ -65,6 +64,27 @@ function EventPage() {
     setSelectedTime(selectedTimeByDate);
   };
 
+  const handleLogin = () => {
+    const username = document.querySelector('input[type="text"]').value;
+    const password = document.querySelector('input[type="password"]').value;
+  
+    if (!username.trim() || !password.trim()) {
+      alert("아이디와 비밀번호를 모두 입력해주세요.");
+      return;
+    }
+  
+    // 로그인 처리 코드 작성
+    const isLoggedIn = true; // 예시로 성공했다고 가정
+  
+    if (isLoggedIn) {
+      alert("로그인 성공! 이벤트에 참여하세요.");
+      // 추가 작업
+    } else {
+      alert("로그인 실패. 아이디와 비밀번호를 확인해주세요.");
+    }
+  };
+  
+   
   if (!eventData) {
     return <p>Loading...</p>;
   }
@@ -73,9 +93,8 @@ function EventPage() {
   const endDate = moment(eventData.time).format("YYYY-MM-DD");
   const startTime = moment(eventData.day).format("HH:mm");
   const endTime = moment(eventData.time).format("HH:mm");
-  const Schedule_Start = moment(eventData.day).toDate(); // 시작일의 시간 정보를 포함하여 moment 객체로 변환합니다.
-  const Schedule_End = moment(eventData.time).toDate(); // 종료일의 시간 정보를 포함하여 moment 객체로 변환합니다.
-
+  const Schedule_Start = moment(eventData.day).toDate();
+  const Schedule_End = moment(eventData.time).toDate();
 
   return (
     <div className="App">
@@ -89,12 +108,13 @@ function EventPage() {
         </div>
       </header>
 
-      <main className="main-content">
+    <div className="login-form">
+      <input type="text" placeholder="아이디" />
+      <input type="password" placeholder="비밀번호" />
+      <Button type="primary" onClick={handleLogin}> 로그인 </Button>         
+    </div>
 
-
-
-
-        
+      <main className="main-content">   
         <h1>Event Details</h1>
         <h2>Event Name: {eventData.eventname}</h2>
         <h2>Event UUID: {eventData.uuid}</h2>

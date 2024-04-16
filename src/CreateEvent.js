@@ -131,7 +131,7 @@ class CreateEvent extends React.Component {
               format="HH시 mm분"
               onChange={this.handleStartTimeChange}
               placeholder="시작 시간"
-              minuteStep={30} // 분 단위 30분 간격으로 변경
+              minuteStep={60} // 분 단위 30분 간격으로 변경
                // 한국어 로케일 적용
             />
             <TimePicker
@@ -139,7 +139,7 @@ class CreateEvent extends React.Component {
               format="HH시 mm분"
               onChange={this.handleEndTimeChange}
               placeholder="종료 시간"
-              minuteStep={30} // 분 단위 30분 간격으로 변경
+              minuteStep={60} // 분 단위 30분 간격으로 변경
                // 한국어 로케일 적용
             />
             </ConfigProvider>
