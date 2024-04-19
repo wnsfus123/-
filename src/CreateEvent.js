@@ -9,7 +9,6 @@ import dayjs from 'dayjs';
 
 dayjs.locale('ko');
 
-
 class CreateEvent extends React.Component {
   constructor(props) {
     super(props);
@@ -19,19 +18,19 @@ class CreateEvent extends React.Component {
       endTime: null,
       selectedDates: [],
     };
-    this.handleStartTimeChange = this.handleStartTimeChange.bind(this);
-    this.handleEndTimeChange = this.handleEndTimeChange.bind(this);
+    // this.handleStartTimeChange = this.handleStartTimeChange.bind(this);
+    // this.handleEndTimeChange = this.handleEndTimeChange.bind(this);
     this.handleEventNameChange = this.handleEventNameChange.bind(this);
     this.handleConfirm = this.handleConfirm.bind(this);
   }
 
-  handleStartTimeChange(time) {
-    this.setState({ startTime: time });
-  }
+  // handleStartTimeChange(time) {
+  //   this.setState({ startTime: time });
+  // }
 
-  handleEndTimeChange(time) {
-    this.setState({ endTime: time });
-  }
+  // handleEndTimeChange(time) {
+  //   this.setState({ endTime: time });
+  // }
 
   handleEventNameChange(event) {
     this.setState({ eventName: event.target.value });
@@ -86,85 +85,75 @@ class CreateEvent extends React.Component {
     console.log("Selected Start Time:", startTimeStr);
     console.log("Selected End Time:", endTimeStr);
   }
-  
- 
 
   render() {
     return (
-      
       <div className="App">
-        <header className="header">
-          <div className="logo-container">
-            <img src="logo.png" alt="모일까 로고" className="logo" />
-          </div>
-          <div className="nav-buttons">
-            <button>로그인</button>
-            <button>회원가입</button>
-          </div>
-        </header>
-        <main className="main-content">
-          <h1>Availability Selector</h1>
-          <Form.Item
-            label="이벤트 이름"
-            name="eventName"
-            rules={[{ required: true, message: "이벤트 이름을 입력해주세요" }]}
-          >
-            <Input onChange={this.handleEventNameChange} />
-          </Form.Item>
-          <div className="date-time-picker">
-          <ConfigProvider locale={koKR}>
-
-            <DatePicker.RangePicker
-              //locale={koKR}
-              format="YYYY년 MM월 DD일"
-              onChange={(dates) => {
-                this.setState({ selectedDates: dates });
-              }}
-              placeholder={['시작 날짜', '종료 날짜']} // placeholder 변경
-              // renderExtraFooter={() => (
-              //   <span>일</span>
-              // )}
-            />
-
-            <TimePicker
-              //locale={ko}
-              format="HH시 mm분"
-              onChange={this.handleStartTimeChange}
-              placeholder="시작 시간"
-              minuteStep={60} // 분 단위 30분 간격으로 변경
-               // 한국어 로케일 적용
-            />
-            <TimePicker
-              //locale={ko}
-              format="HH시 mm분"
-              onChange={this.handleEndTimeChange}
-              placeholder="종료 시간"
-              minuteStep={60} // 분 단위 30분 간격으로 변경
-               // 한국어 로케일 적용
-            />
-            </ConfigProvider>
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                onClick={this.handleConfirm}
-                disabled={
-                  !this.state.selectedDates.length ||
-                  !this.state.startTime ||
-                  !this.state.endTime ||
-                  !this.state.eventName
-                }
+        {/* <Header /> */}
+          <main className="main-content">
+            <h1 style={{ textAlign: "center" }}>이벤트 생성란</h1>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <h3 style={{ textAlign: "center" }}>이벤트 이름</h3>
+              <Form.Item
+                //label={<p style={{ fontSize: "20px", textAlign: "center" }}>이벤트 이름</p>}
+                name="eventName"
+                rules={[{ required: true, message: "이벤트 이름을 입력해주세요" }]}
+                style={{ width: "550px", height: "30px", fontSize: "20px" }}
               >
-                확인
-              </Button>
-            </Form.Item>
-          </div>
-        </main>
- 
+                <Input 
+                onChange={this.handleEventNameChange} 
+                style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
+                placeholder="이벤트 이름을 입력해주세요." 
+                size={"large"}
+                />
+              </Form.Item>
+              <ConfigProvider locale={koKR}>
+                  <DatePicker.RangePicker
+                    style={{width: "550px", marginBottom: '20px' }}
+                    format="YYYY년 MM월 DD일"
+                    onChange={(dates) => {
+                      this.setState({ selectedDates: dates });
+                    }}
+                    placeholder={['시작 날짜', '종료 날짜']}
+                    size={"large"}
+                  />
+                  <TimePicker.RangePicker
+                    style={{width: "550px", marginBottom: '20px',  fontSize: '16px' }}
+                    format="HH시 mm분"
+                    onChange={(times) => {
+                      this.setState({ startTime: times[0], endTime: times[1] });
+                    }}
+                    placeholder={['시작 시간', '종료 시간']}
+                    minuteStep={60}
+                    size={"large"}
+                    picker={{
+                      style: { width: "150px", height: "70px", fontSize: "20px", marginBottom: '20px' },
+                    }}
+                  />
+                </ConfigProvider>
 
-        <footer className="footer">
-          <p>© 2024 모일까. All rights reserved.</p>
-        </footer>
+
+              <Form.Item style={{ width: "100%", textAlign: "center" }}>
+              <Button
+                  type="primary"
+                  htmlType="submit"
+                  onClick={this.handleConfirm}
+                  disabled={
+                    !this.state.selectedDates.length ||
+                    !this.state.startTime ||
+                    !this.state.endTime ||
+                    !this.state.eventName
+                  }
+                  style={{ width: "400px", height: "45px", fontSize: "14px" }}
+                >
+                  확인
+                </Button>
+                </Form.Item>
+
+            </div>
+          </main>
+
+        {/* <Footer/> */}
       </div>
     );
   }

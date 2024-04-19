@@ -3,6 +3,8 @@ import axios from "axios";
 import moment from "moment";
 import { Button } from "antd";
 import ScheduleSelector from "react-schedule-selector";
+import Header from "./Components/MoHeader";
+
 
 function EventPage() {
   const [eventData, setEventData] = useState(null);
@@ -98,16 +100,6 @@ function EventPage() {
 
   return (
     <div className="App">
-      <header className="header">
-        <div className="logo-container">
-          <img src="/logo.png" alt="모일까 로고" className="logo" />
-        </div>
-        <div className="nav-buttons">
-          <button>로그인</button>
-          <button>회원가입</button>
-        </div>
-      </header>
-
     <div className="login-form">
       <input type="text" placeholder="아이디" />
       <input type="password" placeholder="비밀번호" />

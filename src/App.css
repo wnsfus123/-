@@ -42,13 +42,13 @@
   justify-content: center;
  }
  
- .logo {
+ /* .logo {
   width: 75px;
   height: 75px;
-  object-fit: cover; /* 이미지의 비율을 유지하면서 크기를 조정합니다. */
+  object-fit: cover; 
   display: flex;
   align-items: center;
- }
+ } */
 
  .schedule-container {
   width: 200px; /* 원하는 너비로 조정 */
