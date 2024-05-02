@@ -99,7 +99,7 @@ function EventPage() {
   const Schedule_End = moment(eventData.time).toDate();
 
   return (
-    <div className="App">
+    <div className="App" >
     <div className="login-form">
       <input type="text" placeholder="아이디" />
       <input type="password" placeholder="비밀번호" />
@@ -114,6 +114,8 @@ function EventPage() {
         <p>End Day: {endDate}</p>
         <p>Start Time: {startTime}</p>
         <p>End Time: {endTime}</p>
+        <div style={{ display: 'inline-flex', alignItems: 'stretch', width: '1500px' }}>
+        <div style={{ flex: '1', marginRight: '20px', overflowX: "scroll" }}>
         <ScheduleSelector
           selection={schedule}
           numDays={numDays}
@@ -122,7 +124,8 @@ function EventPage() {
           minTime={moment(startTime, "HH:mm").hours()}
           maxTime={moment(endTime, "HH:mm").hours()}
           hourlyChunks={2}
-          rowGap="0px"
+          rowGap="4px"
+          columnGap="7px"
           onChange={handleScheduleChange}
           renderTimeLabel={(time) => {
             const formattedStartTime = moment(time).format("HH:mm");
@@ -133,7 +136,12 @@ function EventPage() {
         <Button type="primary" onClick={handleConfirm}>
           Confirm
         </Button>
-        {/* 선택된 시간을 날짜와 시간으로 표시합니다. */}
+        </div>
+       
+
+
+        <div style={{ flex: '1' }}>
+        <h1>TEST AREA</h1>
         {Object.entries(selectedTime).map(([date, times]) => (
           <div key={date}>
             {times.map((time) => (
@@ -141,11 +149,10 @@ function EventPage() {
             ))}
           </div>
         ))}
+      </div>
+      </div>
       </main>
 
-      <footer className="footer">
-        <p>© 2024 모일까. All rights reserved.</p>
-      </footer>
     </div>
   );
 }
