@@ -1,14 +1,15 @@
 import React from 'react';
-import { Layout } from 'antd';
-import { Navbar, Nav } from 'react-bootstrap';
+import { Layout, Menu } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 
 const { Header } = Layout;
 
-const MyHeader = ({ colorBgContainer }) => {
+const MoHeader = ({ colorBgContainer }) => {
   return (
-    <Header style={{ padding: 0, background: colorBgContainer }}>
-      <Navbar className="header" style={{ backgroundColor: "#021429" }} variant="dark">
-        <Navbar.Brand href="#home">
+    <Header style={{ position: 'fixed', zIndex: 1, width: '100%', padding: '0 50px', background: colorBgContainer }}>
+      <div className="logo" />
+      <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']} style={{ lineHeight: '64px', background: colorBgContainer }}>
+        <Menu.Item key="1">
           <img
             src="/logo.png"
             width="128"
@@ -16,14 +17,16 @@ const MyHeader = ({ colorBgContainer }) => {
             className="d-inline-block align-top logo"
             alt="모일까 로고"
           />
-        </Navbar.Brand>
-        <Nav className="nav-buttons">
-          <Nav.Link href="#login" style={{ color: "white", marginRight: "10px" }}>로그인</Nav.Link>
-          <Nav.Link href="#register" style={{ color: "white" }}>회원가입</Nav.Link>
-        </Nav>
-      </Navbar>
+        </Menu.Item>
+        <Menu.Item key="2" style={{ float: 'right' }}>
+          <a href="#login" style={{ color: 'white', marginRight: '10px' }}>로그인</a>
+        </Menu.Item>
+        <Menu.Item key="3" style={{ float: 'right' }}>
+          <a href="#register" style={{ color: 'white' }}>회원가입</a>
+        </Menu.Item>
+      </Menu>
     </Header>
   );
 };
 
-export default MyHeader;
+export default MoHeader;
