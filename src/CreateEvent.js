@@ -18,19 +18,10 @@ class CreateEvent extends React.Component {
       endTime: null,
       selectedDates: [],
     };
-    // this.handleStartTimeChange = this.handleStartTimeChange.bind(this);
-    // this.handleEndTimeChange = this.handleEndTimeChange.bind(this);
+
     this.handleEventNameChange = this.handleEventNameChange.bind(this);
     this.handleConfirm = this.handleConfirm.bind(this);
   }
-
-  // handleStartTimeChange(time) {
-  //   this.setState({ startTime: time });
-  // }
-
-  // handleEndTimeChange(time) {
-  //   this.setState({ endTime: time });
-  // }
 
   handleEventNameChange(event) {
     this.setState({ eventName: event.target.value });

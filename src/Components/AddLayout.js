@@ -28,12 +28,6 @@ const AppLayout = () => {
 
       <Layout>
       <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)} style={{ overflow: 'auto', height: '100vh', position: 'fixed', left: 0, zIndex: 1 }}>
-        {/* <Sider
-          collapsible
-          collapsed={collapsed}
-          onCollapse={onCollapse}
-          style={{ overflow: 'auto', height: '100vh', position: 'fixed', left: 0, zIndex: 1 }}
-        > */}
           <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
             <Menu.Item key="1" icon={<FormOutlined />}>
               <Link exact to="/main" />
