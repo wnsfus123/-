@@ -4,13 +4,13 @@ import moment from "moment";
 import { Button } from "antd";
 import ScheduleSelector from "react-schedule-selector";
 import Header from "./Components/MoHeader";
-
+import KakaoLogin from "./Components/KakaoLogin"; // KakaoLogin 컴포넌트 import
 
 function EventPage() {
   const [eventData, setEventData] = useState(null);
-  const [selectedTime, setSelectedTime] = useState([]); // 선택된 시간을 배열로 관리합니다.
+  const [selectedTime, setSelectedTime] = useState([]);
   const [schedule, setSchedule] = useState([]);
-  const [numDays, setNumDays] = useState(1); 
+  const [numDays, setNumDays] = useState(1);
 
   useEffect(() => {
     const queryString = window.location.search;
@@ -36,7 +36,7 @@ function EventPage() {
     Object.entries(selectedTime).forEach(([date, times]) => {
       times.forEach((time) => {
         const datetime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm").format();
-        const requestData = {         
+        const requestData = {
           event_name: eventData.eventname,
           event_uuid: eventData.uuid,
           event_datetime: datetime
@@ -54,7 +54,6 @@ function EventPage() {
 
   const handleScheduleChange = (newSchedule) => {
     setSchedule(newSchedule);
-    // 선택된 시간을 각 날짜별로 묶어서 저장합니다.
     const selectedTimeByDate = {};
     newSchedule.forEach((time) => {
       const date = moment(time).format("YYYY-MM-DD");
@@ -85,8 +84,7 @@ function EventPage() {
       alert("로그인 실패. 아이디와 비밀번호를 확인해주세요.");
     }
   };
-  
-   
+
   if (!eventData) {
     return <p>Loading...</p>;
   }
@@ -100,13 +98,15 @@ function EventPage() {
 
   return (
     <div className="App">
-    <div className="login-form">
-      <input type="text" placeholder="아이디" />
-      <input type="password" placeholder="비밀번호" />
-      <Button type="primary" onClick={handleLogin}> 로그인 </Button>         
-    </div>
+      <div className="login-form">
+        <input type="text" placeholder="아이디" />
+        <input type="password" placeholder="비밀번호" />
+        <Button type="primary" onClick={handleLogin}> 로그인 </Button>
+      </div>
 
-      <main className="main-content">   
+      <KakaoLogin /> {/* KakaoLogin 컴포넌트 추가 */}
+
+      <main className="main-content">
         <h1>Event Details</h1>
         <h2>Event Name: {eventData.eventname}</h2>
         <h2>Event UUID: {eventData.uuid}</h2>
@@ -114,38 +114,42 @@ function EventPage() {
         <p>End Day: {endDate}</p>
         <p>Start Time: {startTime}</p>
         <p>End Time: {endTime}</p>
-        <ScheduleSelector
-          selection={schedule}
-          numDays={numDays}
-          startDate={Schedule_Start}
-          endDate={Schedule_End}
-          minTime={moment(startTime, "HH:mm").hours()}
-          maxTime={moment(endTime, "HH:mm").hours()}
-          hourlyChunks={2}
-          rowGap="0px"
-          onChange={handleScheduleChange}
-          renderTimeLabel={(time) => {
-            const formattedStartTime = moment(time).format("HH:mm");
-            const formattedEndTime = moment(time).add(30, "minutes").format("HH:mm");
-            return <div>{formattedStartTime} - {formattedEndTime}</div>;
-          }}
-        />
-        <Button type="primary" onClick={handleConfirm}>
-          Confirm
-        </Button>
-        {/* 선택된 시간을 날짜와 시간으로 표시합니다. */}
-        {Object.entries(selectedTime).map(([date, times]) => (
-          <div key={date}>
-            {times.map((time) => (
-              <p key={time}>{date} {time}</p>
+        <div style={{ display: 'inline-flex', alignItems: 'stretch', width: '1500px' }}>
+          <div style={{ flex: '1', marginRight: '20px', overflowX: "scroll" }}>
+            <ScheduleSelector
+              selection={schedule}
+              numDays={numDays}
+              startDate={Schedule_Start}
+              endDate={Schedule_End}
+              minTime={moment(startTime, "HH:mm").hours()}
+              maxTime={moment(endTime, "HH:mm").hours()}
+              hourlyChunks={2}
+              rowGap="4px"
+              columnGap="7px"
+              onChange={handleScheduleChange}
+              renderTimeLabel={(time) => {
+                const formattedStartTime = moment(time).format("HH:mm");
+                const formattedEndTime = moment(time).add(30, "minutes").format("HH:mm");
+                return <div>{formattedStartTime} - {formattedEndTime}</div>;
+              }}
+            />
+            <Button type="primary" onClick={handleConfirm}>
+              Confirm
+            </Button>
+          </div>
+
+          <div style={{ flex: '1' }}>
+            <h1>TEST AREA</h1>
+            {Object.entries(selectedTime).map(([date, times]) => (
+              <div key={date}>
+                {times.map((time) => (
+                  <p key={time}>{date} {time}</p>
+                ))}
+              </div>
             ))}
           </div>
-        ))}
+        </div>
       </main>
-
-      <footer className="footer">
-        <p>© 2024 모일까. All rights reserved.</p>
-      </footer>
     </div>
   );
 }
