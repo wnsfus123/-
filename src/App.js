@@ -5,6 +5,7 @@ import CreateEvent from "./CreateEvent";
 import EventPage from "./EventPage";
 import TimeTest from "./TimeTest";
 import AddLayout from "./Components/AddLayout";
+import Redirection from "./Redirection";
 
 
 const App = () => {
@@ -17,6 +18,7 @@ const App = () => {
               <Route path="/test" element={<EventPage />} />
               <Route path="/test/:uuid" element={<EventPage />} />
               <Route path="/time" element={<TimeTest />} />
+              <Route path="/auth" element={<Redirection />} />
             </Route>
             <Route index={true} element={<Navigate replace to={"/main"}/>} />
           </Routes>

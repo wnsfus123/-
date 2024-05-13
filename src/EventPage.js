@@ -4,7 +4,7 @@ import moment from "moment";
 import { Button } from "antd";
 import ScheduleSelector from "react-schedule-selector";
 import Header from "./Components/MoHeader";
-
+import SocialKakao from "./Components/Socialkakao";
 
 function EventPage() {
   const [eventData, setEventData] = useState(null);
@@ -103,7 +103,8 @@ function EventPage() {
     <div className="login-form">
       <input type="text" placeholder="아이디" />
       <input type="password" placeholder="비밀번호" />
-      <Button type="primary" onClick={handleLogin}> 로그인 </Button>         
+      <Button type="primary" onClick={handleLogin}> 로그인 </Button> 
+      <SocialKakao/>        
     </div>
 
       <main className="main-content">   

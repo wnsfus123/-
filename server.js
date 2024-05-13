@@ -122,7 +122,31 @@ app.get("/api/events/:uuid", (req, res) => {
     });
   });
 });
+app.post("/api/save-user-info", (req, res) => {
+  const { userName } = req.body;
 
+  // 사용자 입력 이스케이핑
+  const escapedUserName = connection.escape(userName);
+
+  const userInfo = {
+    userName: escapedUserName
+  };
+
+  connection.query('INSERT INTO users SET ?', userInfo, (error, results, fields) => {
+    if (error) {
+      console.error('사용자 정보 추가 중 오류 발생:', error);
+      // 에러 메시지와 함께 클라이언트에게 에러 응답 전송
+      res.status(500).send(`사용자 정보 추가 중 오류 발생: ${error.message}`);
+      return;
+    }
+
+    console.log('사용자 정보가 성공적으로 추가되었습니다.');
+    console.log('사용자 이름:', userName);
+
+    // 성공적인 응답 전송
+    res.status(200).send('사용자 정보가 성공적으로 추가되었습니다.');
+  });
+});
 app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, '/build/index.html'));
 });
