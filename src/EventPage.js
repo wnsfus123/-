@@ -4,7 +4,7 @@ import moment from "moment";
 import { Button } from "antd";
 import ScheduleSelector from "react-schedule-selector";
 import Header from "./Components/MoHeader";
-import KakaoLogin from "./Components/KakaoLogin"; // KakaoLogin 컴포넌트 import
+import Socialkakao from "./Components/Socialkakao"; // Socialkakao 컴포넌트 import
 
 function EventPage() {
   const [eventData, setEventData] = useState(null);
@@ -104,7 +104,7 @@ function EventPage() {
         <Button type="primary" onClick={handleLogin}> 로그인 </Button>
       </div>
 
-      <KakaoLogin /> {/* KakaoLogin 컴포넌트 추가 */}
+      <Socialkakao /> {/* Socialkakao 컴포넌트 추가 */}
 
       <main className="main-content">
         <h1>Event Details</h1>
