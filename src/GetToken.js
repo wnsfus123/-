@@ -46,8 +46,8 @@ const GetToken = () => {
           setAccessToken(res.data.access_token);
           console.log("Access Token:", res.data.access_token);
 
-          // 로그인 성공 후 페이지 이동
-          navigate('/LoginSuccess');
+          // 로그인 성공 후 페이지 이동 , state 객체를 통해 엑세스 토큰 전달
+          navigate('/LoginSuccess', { state: { kakaoAccessToken: res.data.access_token } });
         } catch (err) {
           console.warn(err);
           // 에러 발생 시 처리
