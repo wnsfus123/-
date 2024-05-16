@@ -123,31 +123,32 @@ app.get("/api/events/:uuid", (req, res) => {
   });
 });
 
+// 사용자 정보 express
 app.post("/api/save-user-info", (req, res) => {
-  const { userName } = req.body;
-
-  // 사용자 입력 이스케이핑
-  const escapedUserName = connection.escape(userName);
+  const { kakaoId, nickname } = req.body;
 
   const userInfo = {
-    userName: escapedUserName
+    user_id: kakaoId,
+    nickname: nickname
   };
 
+  // 사용자 정보 저장 로직
   connection.query('INSERT INTO users SET ?', userInfo, (error, results, fields) => {
     if (error) {
       console.error('사용자 정보 추가 중 오류 발생:', error);
-      // 에러 메시지와 함께 클라이언트에게 에러 응답 전송
-      res.status(500).send(`사용자 정보 추가 중 오류 발생: ${error.message}`);
+      res.status(500).send('사용자 정보 추가 중 오류 발생');
       return;
     }
 
     console.log('사용자 정보가 성공적으로 추가되었습니다.');
-    console.log('사용자 이름:', userName);
+    console.log('사용자 ID:', kakaoId);
+    console.log('닉네임:', nickname);
 
-    // 성공적인 응답 전송
     res.status(200).send('사용자 정보가 성공적으로 추가되었습니다.');
   });
 });
+
+
 
 
 

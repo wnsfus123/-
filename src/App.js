@@ -6,7 +6,6 @@ import EventPage from "./EventPage";
 import TimeTest from "./TimeTest";
 import AddLayout from "./Components/AddLayout";
 import Socialkakao from "./Components/Socialkakao";
-import Redirection from "./Redirection";
 import GetToken from "./GetToken";
 import LoginSuccess from "./LoginSuccess";
 
