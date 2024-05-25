@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "./App.css";
 import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input } from "antd";
 import axios from 'axios';
@@ -6,30 +6,24 @@ import { v4 as uuidv4 } from 'uuid'; // UUID 라이브러리에서 v4 함수를 
 import koKR from 'antd/lib/locale/ko_KR';
 import 'dayjs/locale/ko';
 import dayjs from 'dayjs';
+import { useLocation } from 'react-router-dom';
+import useUserStore from './store/userStore'; // Zustand 스토어 가져오기
 
 dayjs.locale('ko');
 
-class CreateEvent extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      eventName: "",
-      startTime: null,
-      endTime: null,
-      selectedDates: [],
-    };
+const CreateEvent = () => {
+  const [eventName, setEventName] = useState("");
+  const [startTime, setStartTime] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const userInfo = useUserStore(state => state.userInfo);
+  const location = useLocation();
 
-    this.handleEventNameChange = this.handleEventNameChange.bind(this);
-    this.handleConfirm = this.handleConfirm.bind(this);
+  const handleEventNameChange = (event) => {
+    setEventName(event.target.value);
   }
 
-  handleEventNameChange(event) {
-    this.setState({ eventName: event.target.value });
-  }
-
-  handleConfirm() {
-    const { startTime, endTime, selectedDates, eventName } = this.state;
-
+  const handleConfirm = () => {
     // 최소한 두 개 이상의 날짜가 선택되었는지 확인
     if (selectedDates.length < 2) {
       console.error("At least two dates should be selected");
@@ -51,6 +45,10 @@ class CreateEvent extends React.Component {
     const startDayLocal = startDay.format("YYYY-MM-DD");
     const endDayLocal = endDay.format("YYYY-MM-DD");
 
+    // zustand에서 가져온 아이디, 닉네임
+    const kakaoId = userInfo.id.toString() 
+    const nickname = userInfo.kakao_account.profile.nickname 
+
     // 시작일과 종료일을 서버로 전송
     axios
       .post("/api/events", {
@@ -60,6 +58,8 @@ class CreateEvent extends React.Component {
         endDay: endDayLocal,
         startTime: startTimeStr,
         endTime: endTimeStr,
+        kakaoId: userInfo.id.toString(), // Zustand 스토어에서 가져온 카카오 ID
+        nickname: userInfo.kakao_account.profile.nickname // Zustand 스토어에서 가져온 닉네임
       })
       .then((response) => {
         console.log("Data sent successfully:", response.data);
@@ -75,79 +75,86 @@ class CreateEvent extends React.Component {
     console.log("End Day:", endDay);
     console.log("Selected Start Time:", startTimeStr);
     console.log("Selected End Time:", endTimeStr);
+    console.log("Your Id:", kakaoId);
+    console.log("Your nickname:", nickname);
   }
 
-  render() {
-    return (
-      <div className="App">
-        {/* <Header /> */}
-          <main className="main-content">
-            <h1 style={{ textAlign: "center" }}>이벤트 생성란</h1>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <h3 style={{ textAlign: "center" }}>이벤트 이름</h3>
-              <Form.Item
-                //label={<p style={{ fontSize: "20px", textAlign: "center" }}>이벤트 이름</p>}
-                name="eventName"
-                rules={[{ required: true, message: "이벤트 이름을 입력해주세요" }]}
-                style={{ width: "550px", height: "30px", fontSize: "20px" }}
-              >
-                <Input 
-                onChange={this.handleEventNameChange} 
-                style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
-                placeholder="이벤트 이름을 입력해주세요." 
-                size={"large"}
-                />
-              </Form.Item>
-              <ConfigProvider locale={koKR}>
-                  <DatePicker.RangePicker
-                    style={{width: "550px", marginBottom: '20px' }}
-                    format="YYYY년 MM월 DD일"
-                    onChange={(dates) => {
-                      this.setState({ selectedDates: dates });
-                    }}
-                    placeholder={['시작 날짜', '종료 날짜']}
-                    size={"large"}
-                  />
-                  <TimePicker.RangePicker
-                    style={{width: "550px", marginBottom: '20px',  fontSize: '16px' }}
-                    format="HH시 mm분"
-                    onChange={(times) => {
-                      this.setState({ startTime: times[0], endTime: times[1] });
-                    }}
-                    placeholder={['시작 시간', '종료 시간']}
-                    minuteStep={60}
-                    size={"large"}
-                    picker={{
-                      style: { width: "150px", height: "70px", fontSize: "20px", marginBottom: '20px' },
-                    }}
-                  />
-                </ConfigProvider>
+  return (
+    <div className="App">
+      <main className="main-content">
+        <h1 style={{ textAlign: "center" }}>이벤트 생성란</h1>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <h3 style={{ textAlign: "center" }}>이벤트 이름</h3>
+          <Form.Item
+            name="eventName"
+            rules={[{ required: true, message: "이벤트 이름을 입력해주세요" }]}
+            style={{ width: "550px", height: "30px", fontSize: "20px" }}
+          >
+            <Input 
+              onChange={handleEventNameChange} 
+              style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
+              placeholder="이벤트 이름을 입력해주세요." 
+              size={"large"}
+            />
+          </Form.Item>
+          <ConfigProvider locale={koKR}>
+            <DatePicker.RangePicker
+              style={{width: "550px", marginBottom: '20px' }}
+              format="YYYY년 MM월 DD일"
+              onChange={(dates) => {
+                setSelectedDates(dates);
+              }}
+              placeholder={['시작 날짜', '종료 날짜']}
+              size={"large"}
+            />
+            <TimePicker.RangePicker
+              style={{width: "550px", marginBottom: '20px',  fontSize: '16px' }}
+              format="HH시 mm분"
+              onChange={(times) => {
+                setStartTime(times[0]);
+                setEndTime(times[1]);
+              }}
+              placeholder={['시작 시간', '종료 시간']}
+              minuteStep={60}
+              size={"large"}
+              picker={{
+                style: { width: "150px", height: "70px", fontSize: "20px", marginBottom: '20px' },
+              }}
+            />
+          </ConfigProvider>
 
+          <Form.Item style={{ width: "100%", textAlign: "center" }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              onClick={handleConfirm}
+              disabled={
+                !selectedDates.length ||
+                !startTime ||
+                !endTime ||
+                !eventName
+              }
+              style={{ width: "400px", height: "45px", fontSize: "14px" }}
+            >
+              확인
+            </Button>
+          </Form.Item>
+        </div>
+      </main>
 
-              <Form.Item style={{ width: "100%", textAlign: "center" }}>
-              <Button
-                  type="primary"
-                  htmlType="submit"
-                  onClick={this.handleConfirm}
-                  disabled={
-                    !this.state.selectedDates.length ||
-                    !this.state.startTime ||
-                    !this.state.endTime ||
-                    !this.state.eventName
-                  }
-                  style={{ width: "400px", height: "45px", fontSize: "14px" }}
-                >
-                  확인
-                </Button>
-                </Form.Item>
-
-            </div>
-          </main>
-
-        {/* <Footer/> */}
+      {/* 로그인 성공 컴포넌트 */}
+      <div>
+        <h2>로그인 성공!</h2>
+        {userInfo ? (
+          <div>
+            <p>{userInfo.id.toString()}, 안녕하세요 {userInfo.kakao_account.profile.nickname}님!</p>
+          </div>
+        ) : (
+          <p>사용자 정보를 불러오는 중...</p>
+        )}
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default CreateEvent;

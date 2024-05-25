@@ -4,7 +4,6 @@ import moment from "moment";
 import { Button } from "antd";
 import ScheduleSelector from "react-schedule-selector";
 import Header from "./Components/MoHeader";
-import Socialkakao from "./Components/Socialkakao"; // Socialkakao 컴포넌트 import
 
 function EventPage() {
   const [eventData, setEventData] = useState(null);
@@ -21,8 +20,8 @@ function EventPage() {
       .get(`/api/events/${uuid}`)
       .then((response) => {
         setEventData(response.data);
-        const startDate = moment(response.data.day);
-        const endDate = moment(response.data.time);
+        const startDate = moment(response.data.startday);
+        const endDate = moment(response.data.endday);
         const diffDays = endDate.diff(startDate, "days") + 1;
         setNumDays(diffDays);
       })
@@ -32,7 +31,6 @@ function EventPage() {
   }, []);
 
   const handleConfirm = () => {
-    // 선택된 시간을 서버로 보내어 데이터베이스에 저장합니다.
     Object.entries(selectedTime).forEach(([date, times]) => {
       times.forEach((time) => {
         const datetime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm").format();
@@ -65,47 +63,19 @@ function EventPage() {
     setSelectedTime(selectedTimeByDate);
   };
 
-  const handleLogin = () => {
-    const username = document.querySelector('input[type="text"]').value;
-    const password = document.querySelector('input[type="password"]').value;
-  
-    if (!username.trim() || !password.trim()) {
-      alert("아이디와 비밀번호를 모두 입력해주세요.");
-      return;
-    }
-  
-    // 로그인 처리 코드 작성
-    const isLoggedIn = true; // 예시로 성공했다고 가정
-  
-    if (isLoggedIn) {
-      alert("로그인 성공! 이벤트에 참여하세요.");
-      // 추가 작업
-    } else {
-      alert("로그인 실패. 아이디와 비밀번호를 확인해주세요.");
-    }
-  };
-
   if (!eventData) {
     return <p>Loading...</p>;
   }
 
-  const startDate = moment(eventData.day).format("YYYY-MM-DD");
-  const endDate = moment(eventData.time).format("YYYY-MM-DD");
-  const startTime = moment(eventData.day).format("HH:mm");
-  const endTime = moment(eventData.time).format("HH:mm");
-  const Schedule_Start = moment(eventData.day).toDate();
-  const Schedule_End = moment(eventData.time).toDate();
+  const startDate = moment(eventData.startday).format("YYYY-MM-DD");
+  const endDate = moment(eventData.endday).format("YYYY-MM-DD");
+  const startTime = moment(eventData.startday).format("HH:mm");
+  const endTime = moment(eventData.endday).format("HH:mm");
+  const Schedule_Start = moment(eventData.startday).toDate();
+  const Schedule_End = moment(eventData.endday).toDate();
 
   return (
     <div className="App">
-      <div className="login-form">
-        <input type="text" placeholder="아이디" />
-        <input type="password" placeholder="비밀번호" />
-        <Button type="primary" onClick={handleLogin}> 로그인 </Button>
-      </div>
-
-      <Socialkakao /> {/* Socialkakao 컴포넌트 추가 */}
-
       <main className="main-content">
         <h1>Event Details</h1>
         <h2>Event Name: {eventData.eventname}</h2>

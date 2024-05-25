@@ -1,33 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+// src/components/LoginSuccess.js
+import React from 'react';
 import { useLocation } from 'react-router-dom';
+import useUserStore from './store/userStore'; // Zustand 스토어 가져오기
 
 const LoginSuccess = () => {
-  const location = useLocation();
-  const { kakaoAccessToken } = location.state || {};
-  const [userInfo, setUserInfo] = useState(null);
-
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      if (!kakaoAccessToken) return;
-
-      try {
-        const res = await axios({
-          method: 'GET',
-          headers: {
-            "Authorization": `Bearer ${kakaoAccessToken}`
-          },
-          url: "https://kapi.kakao.com/v2/user/me",
-        });
-
-        setUserInfo(res.data);
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-      }
-    };
-
-    fetchUserInfo();
-  }, [kakaoAccessToken]);
+  
+  const userInfo = useUserStore(state => state.userInfo);
 
   return (
     <div>

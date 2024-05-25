@@ -39,7 +39,8 @@
     "socket.io-client": "^1.7.4",
     "socketio-file-upload": "^0.7.3",
     "uuid": "^9.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "zustand": "^4.5.2"
   },
   "scripts": {
     "start": "react-scripts start",

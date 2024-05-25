@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import GetUserInfo from './GetUserInfo'; // GetUserInfo를 가져옴
-import LoginSuccess from './LoginSuccess'; // LoginSuccess를 가져옴
+
 
 const GetToken = () => {
   const [accessToken, setAccessToken] = useState('');
@@ -47,7 +47,7 @@ const GetToken = () => {
           console.log("Access Token:", res.data.access_token);
 
           // 로그인 성공 후 페이지 이동 , state 객체를 통해 엑세스 토큰 전달
-          navigate('/LoginSuccess', { state: { kakaoAccessToken: res.data.access_token } });
+          navigate('/create');
         } catch (err) {
           console.warn(err);
           // 에러 발생 시 처리

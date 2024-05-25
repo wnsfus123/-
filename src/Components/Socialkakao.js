@@ -6,9 +6,7 @@ const Socialkakao = () => {
   const REDIRECT_URI = process.env.REACT_APP_KAKAO_REDIRECT_URI;                    
  
   const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
-  const handleLogin = ()=>{
-    window.location.href = kakaoURL
-  }
+  
   return (
     <div>
       <a href={kakaoURL}>

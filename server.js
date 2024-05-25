@@ -35,7 +35,7 @@ app.get('/', (req, res) => {
 });
 
 app.post("/api/events", (req, res) => {
-  const { uuid, eventName, startDay, endDay, startTime, endTime } = req.body;
+  const { uuid, eventName, startDay, endDay, startTime, endTime, kakaoId, nickname } = req.body;
 
   // 각 날짜 및 시간을 결합하여 datetime 형식으로 변환
   const startDateTime = moment(`${startDay} ${startTime}`, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
@@ -45,8 +45,10 @@ app.post("/api/events", (req, res) => {
   const eventData = {
     uuid: uuid,
     eventname: eventName,
-    day: startDateTime,
-    time: endDateTime
+    startday: startDateTime,
+    endday: endDateTime,
+    kakaoId: kakaoId,
+    nickname: nickname
   };
 
   // 데이터베이스에 이벤트 추가
@@ -62,6 +64,8 @@ app.post("/api/events", (req, res) => {
     console.log('이벤트 이름:', eventName);
     console.log('시작 일시:', startDateTime);
     console.log('종료 일시:', endDateTime);
+    console.log('카카오 ID:', kakaoId);
+    console.log('닉네임:', nickname);
 
     // 응답 전송
     res.status(200).send('이벤트가 성공적으로 추가되었습니다.');
@@ -117,8 +121,10 @@ app.get("/api/events/:uuid", (req, res) => {
     res.status(200).json({
       uuid: eventData.uuid,
       eventname: eventData.eventname,
-      day: eventData.day,
-      time: eventData.time
+      startday: eventData.startday,
+      endday: eventData.endday,
+      kakaoId: eventData.kakaoId,
+      nickname: eventData.nickname
     });
   });
 });
