@@ -8,6 +8,7 @@ import 'dayjs/locale/ko';
 import dayjs from 'dayjs';
 import { useLocation } from 'react-router-dom';
 import useUserStore from './store/userStore'; // Zustand 스토어 가져오기
+import moment from 'moment';
 
 dayjs.locale('ko');
 
@@ -49,6 +50,9 @@ const CreateEvent = () => {
     const kakaoId = userInfo.id.toString() 
     const nickname = userInfo.kakao_account.profile.nickname 
 
+    // 생성 날짜
+    const createDay = moment().format("YYYY-MM-DD HH:mm:ss");
+
     // 시작일과 종료일을 서버로 전송
     axios
       .post("/api/events", {
@@ -59,7 +63,8 @@ const CreateEvent = () => {
         startTime: startTimeStr,
         endTime: endTimeStr,
         kakaoId: userInfo.id.toString(), // Zustand 스토어에서 가져온 카카오 ID
-        nickname: userInfo.kakao_account.profile.nickname // Zustand 스토어에서 가져온 닉네임
+        nickname: userInfo.kakao_account.profile.nickname, // Zustand 스토어에서 가져온 닉네임
+        createDay: createDay
       })
       .then((response) => {
         console.log("Data sent successfully:", response.data);
@@ -77,6 +82,7 @@ const CreateEvent = () => {
     console.log("Selected End Time:", endTimeStr);
     console.log("Your Id:", kakaoId);
     console.log("Your nickname:", nickname);
+    console.log("Create Day:", createDay);
   }
 
   return (

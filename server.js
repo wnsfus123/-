@@ -35,7 +35,7 @@ app.get('/', (req, res) => {
 });
 
 app.post("/api/events", (req, res) => {
-  const { uuid, eventName, startDay, endDay, startTime, endTime, kakaoId, nickname } = req.body;
+  const { uuid, eventName, startDay, endDay, startTime, endTime, kakaoId, nickname, createDay } = req.body;
 
   // 각 날짜 및 시간을 결합하여 datetime 형식으로 변환
   const startDateTime = moment(`${startDay} ${startTime}`, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
@@ -48,7 +48,8 @@ app.post("/api/events", (req, res) => {
     startday: startDateTime,
     endday: endDateTime,
     kakaoId: kakaoId,
-    nickname: nickname
+    nickname: nickname,
+    createday: createDay
   };
 
   // 데이터베이스에 이벤트 추가
@@ -66,6 +67,7 @@ app.post("/api/events", (req, res) => {
     console.log('종료 일시:', endDateTime);
     console.log('카카오 ID:', kakaoId);
     console.log('닉네임:', nickname);
+    console.log('생성 날짜:', createDay);
 
     // 응답 전송
     res.status(200).send('이벤트가 성공적으로 추가되었습니다.');
@@ -73,11 +75,11 @@ app.post("/api/events", (req, res) => {
 });
 
 app.post("/api/save-event-schedule", (req, res) => {
-  const { user_id, user_pw, event_name, event_uuid, event_datetime } = req.body;
+  const { kakaoId, nickname, event_name, event_uuid, event_datetime } = req.body;
 
   const eventData = {
-    user_id: user_id,
-    user_pw: user_pw,
+    kakaoId: kakaoId,
+    nickname: nickname,
     event_name: event_name,
     event_uuid: event_uuid,
     event_datetime: event_datetime
@@ -91,8 +93,8 @@ app.post("/api/save-event-schedule", (req, res) => {
     }
 
     console.log('이벤트 스케줄이 성공적으로 추가되었습니다.');
-    console.log('User ID:', user_id);
-    console.log('User ID:', user_pw);
+    console.log('카카오 ID:', kakaoId);
+    console.log('닉네임:', nickname);
     console.log('이벤트 이름:', event_name);
     console.log('이벤트 UUID:', event_uuid);
     console.log('이벤트 일시:', event_datetime);

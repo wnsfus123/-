@@ -10,6 +10,7 @@ function EventPage() {
   const [selectedTime, setSelectedTime] = useState([]);
   const [schedule, setSchedule] = useState([]);
   const [numDays, setNumDays] = useState(1);
+  
 
   useEffect(() => {
     const queryString = window.location.search;
@@ -31,10 +32,14 @@ function EventPage() {
   }, []);
 
   const handleConfirm = () => {
+    
     Object.entries(selectedTime).forEach(([date, times]) => {
       times.forEach((time) => {
         const datetime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm").format();
+        
         const requestData = {
+          kakaoId: eventData.kakaoId,
+          nickname: eventData.nickname,
           event_name: eventData.eventname,
           event_uuid: eventData.uuid,
           event_datetime: datetime
@@ -84,6 +89,7 @@ function EventPage() {
         <p>End Day: {endDate}</p>
         <p>Start Time: {startTime}</p>
         <p>End Time: {endTime}</p>
+        
         <div style={{ display: 'inline-flex', alignItems: 'stretch', width: '1500px' }}>
           <div style={{ flex: '1', marginRight: '20px', overflowX: "scroll" }}>
             <ScheduleSelector
