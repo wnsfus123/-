@@ -1,21 +1,40 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Socialkakao from "./Components/Socialkakao";
+import useUserStore from './store/userStore';
+import checkKakaoLoginStatus from "./Components/checkKakaoLoginStatus"; // 로그인 상태 확인 함수 가져오기
 
 const Loginpage = () => {
-    // UUID 상태 및 설정 함수
     const [uuid, setUuid] = useState('');
+    const userInfo = useUserStore(state => state.userInfo);
+    const setUserInfo = useUserStore(state => state.setUserInfo);
+    const clearUserInfo = useUserStore(state => state.clearUserInfo);
 
-    // UUID 값을 변경하는 함수
     const handleUuidChange = (event) => {
         setUuid(event.target.value);
     };
 
-    // 확인 버튼 클릭 시 이벤트 핸들러
-    const handleSubmit = (event) => {
-        event.preventDefault(); // 폼 제출 기본 동작 방지
-        // eventschedule에서 UUID 값을 찾는다고 가정하고, 해당 UUID로 페이지 이동
+    const handleLoginSuccess = (userInfo) => {
+        setUserInfo(userInfo);
         window.location.href = `http://localhost:8080/test/?key=${uuid}`;
     };
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        window.location.href = `http://localhost:8080/test/?key=${uuid}`;
+    };
+
+    useEffect(() => {
+        const checkLoginStatus = async () => {
+            if (userInfo && userInfo.accessToken) {
+                const status = await checkKakaoLoginStatus(userInfo.accessToken);
+                if (!status) {
+                    clearUserInfo(); // 카카오 로그아웃 시 상태 초기화
+                }
+            }
+        };
+
+        checkLoginStatus();
+    }, []); // 빈 배열을 두어 컴포넌트가 마운트될 때 한 번만 실행
 
     return (
         <div style={{
@@ -26,17 +45,8 @@ const Loginpage = () => {
             height: '100vh'
         }}>
             <h1>로그인 페이지</h1>
-            <Socialkakao /> {/* Socialkakao 컴포넌트 추가 */}
-            {/* UUID 입력 폼 */}
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    value={uuid}
-                    onChange={handleUuidChange}
-                    placeholder="UUID를 입력하세요"
-                />
-                <button type="submit">확인</button>
-            </form>
+            <Socialkakao onLoginSuccess={handleLoginSuccess} />
+
         </div>
     );
 };
