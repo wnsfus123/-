@@ -5,7 +5,7 @@ import CreateEvent from "./CreateEvent";
 import EventPage from "./EventPage";
 import TimeTest from "./TimeTest";
 import AddLayout from "./Components/AddLayout";
-import Socialkakao from "./Components/SocialKakao";
+import Socialkakao from "./Components/Socialkakao";
 import GetToken from "./GetToken";
 import LoginSuccess from "./LoginSuccess";
 import Loginpage from "./Loginpage";
