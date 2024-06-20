@@ -1,35 +1,75 @@
-import React from "react";
-import "./App.css";
-import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input } from "antd";
+import React, { useEffect, useState } from "react";
+import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input, Card } from "antd";
 import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid'; // UUID 라이브러리에서 v4 함수를 가져옴
+import { v4 as uuidv4 } from 'uuid';
 import koKR from 'antd/lib/locale/ko_KR';
 import 'dayjs/locale/ko';
 import dayjs from 'dayjs';
-
+import { useLocation } from 'react-router-dom';
+import useUserStore from './store/userStore';
+import moment from 'moment';
+import Socialkakao from "./Components/Socialkakao";
 dayjs.locale('ko');
 
-class CreateEvent extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      eventName: "",
-      startTime: null,
-      endTime: null,
-      selectedDates: [],
+const CreateEvent = () => {
+  const [eventName, setEventName] = useState("");
+  const [startTime, setStartTime] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [uuid, setUuid] = useState(""); // UUID 상태 추가
+  const userInfo = useUserStore(state => state.userInfo);
+  const setUserInfo = useUserStore(state => state.setUserInfo);
+  const clearUserInfo = useUserStore(state => state.clearUserInfo);
+  const location = useLocation();
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const response = await axios.get('/api/check-login-status', { withCredentials: true });
+        if (response.data.isLoggedIn) {
+          setUserInfo(response.data.userInfo);
+        } else {
+          clearUserInfo();
+        }
+      } catch (error) {
+        console.error('Error checking login status:', error);
+        clearUserInfo();
+      }
     };
 
-    this.handleEventNameChange = this.handleEventNameChange.bind(this);
-    this.handleConfirm = this.handleConfirm.bind(this);
+    checkLoginStatus();
+  }, [setUserInfo, clearUserInfo]);
+
+  const handleEventNameChange = (event) => {
+    setEventName(event.target.value);
   }
 
-  handleEventNameChange(event) {
-    this.setState({ eventName: event.target.value });
+  const handleUuidChange = (event) => {
+    setUuid(event.target.value); // UUID 변경 핸들러 추가
   }
 
-  handleConfirm() {
-    const { startTime, endTime, selectedDates, eventName } = this.state;
+  const handleConfirm = () => {
+    if (!uuid) {
+      console.error("UUID를 입력해주세요");
+      return;
+    }
 
+    // zustand에서 가져온 아이디, 닉네임
+    if (!userInfo) {
+      console.error("로그인 정보가 없습니다.");
+      return;
+    }
+    const kakaoId = userInfo.id.toString(); 
+    const nickname = userInfo.kakao_account.profile.nickname; 
+
+    window.location.href = `http://localhost:8080/test/?key=${uuid}&kakaoId=${kakaoId}&nickname=${nickname}`;
+
+    console.log("UUID:", uuid);
+    console.log("Your Id:", kakaoId);
+    console.log("Your nickname:", nickname);
+  }
+
+  const handleCreateEvent = () => {
     // 최소한 두 개 이상의 날짜가 선택되었는지 확인
     if (selectedDates.length < 2) {
       console.error("At least two dates should be selected");
@@ -51,6 +91,17 @@ class CreateEvent extends React.Component {
     const startDayLocal = startDay.format("YYYY-MM-DD");
     const endDayLocal = endDay.format("YYYY-MM-DD");
 
+    // zustand에서 가져온 아이디, 닉네임
+    if (!userInfo) {
+      console.error("로그인 정보가 없습니다.");
+      return;
+    }
+    const kakaoId = userInfo.id.toString(); 
+    const nickname = userInfo.kakao_account.profile.nickname; 
+
+    // 생성 날짜
+    const createDay = moment().format("YYYY-MM-DD HH:mm:ss");
+
     // 시작일과 종료일을 서버로 전송
     axios
       .post("/api/events", {
@@ -60,6 +111,9 @@ class CreateEvent extends React.Component {
         endDay: endDayLocal,
         startTime: startTimeStr,
         endTime: endTimeStr,
+        kakaoId: userInfo.id.toString(), // Zustand 스토어에서 가져온 카카오 ID
+        nickname: userInfo.kakao_account.profile.nickname, // Zustand 스토어에서 가져온 닉네임
+        createDay: createDay
       })
       .then((response) => {
         console.log("Data sent successfully:", response.data);
@@ -75,79 +129,125 @@ class CreateEvent extends React.Component {
     console.log("End Day:", endDay);
     console.log("Selected Start Time:", startTimeStr);
     console.log("Selected End Time:", endTimeStr);
+    console.log("Your Id:", kakaoId);
+    console.log("Your nickname:", nickname);
+    console.log("Create Day:", createDay);
   }
 
-  render() {
-    return (
-      <div className="App">
-        {/* <Header /> */}
-          <main className="main-content">
-            <h1 style={{ textAlign: "center" }}>이벤트 생성란</h1>
+  if (!userInfo) {
+    return <Socialkakao/>;
+  }
+
+  return (
+    <div className="App">
+      <main className="main-content">
+        <h1 style={{ textAlign: "center" }}>이벤트 생성란</h1>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Card title="이벤트 생성" style={{ width: 600, marginBottom: 20 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <h3 style={{ textAlign: "center" }}>이벤트 이름</h3>
+              <h3 style={{ textAlign: "center" }}>이벤트 이름</h3>
               <Form.Item
-                //label={<p style={{ fontSize: "20px", textAlign: "center" }}>이벤트 이름</p>}
                 name="eventName"
                 rules={[{ required: true, message: "이벤트 이름을 입력해주세요" }]}
                 style={{ width: "550px", height: "30px", fontSize: "20px" }}
               >
                 <Input 
-                onChange={this.handleEventNameChange} 
-                style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
-                placeholder="이벤트 이름을 입력해주세요." 
-                size={"large"}
+                  onChange={handleEventNameChange} 
+                  style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
+                  placeholder="이벤트 이름을 입력해주세요." 
+                  size={"large"}
                 />
               </Form.Item>
               <ConfigProvider locale={koKR}>
-                  <DatePicker.RangePicker
-                    style={{width: "550px", marginBottom: '20px' }}
-                    format="YYYY년 MM월 DD일"
-                    onChange={(dates) => {
-                      this.setState({ selectedDates: dates });
-                    }}
-                    placeholder={['시작 날짜', '종료 날짜']}
-                    size={"large"}
-                  />
-                  <TimePicker.RangePicker
-                    style={{width: "550px", marginBottom: '20px',  fontSize: '16px' }}
-                    format="HH시 mm분"
-                    onChange={(times) => {
-                      this.setState({ startTime: times[0], endTime: times[1] });
-                    }}
-                    placeholder={['시작 시간', '종료 시간']}
-                    minuteStep={60}
-                    size={"large"}
-                    picker={{
-                      style: { width: "150px", height: "70px", fontSize: "20px", marginBottom: '20px' },
-                    }}
-                  />
-                </ConfigProvider>
-
+                <DatePicker.RangePicker
+                  style={{width: "550px", marginBottom: '20px' }}
+                  format="YYYY년 MM월 DD일"
+                  onChange={(dates) => {
+                    setSelectedDates(dates);
+                  }}
+                  placeholder={['시작 날짜', '종료 날짜']}
+                  size={"large"}
+                />
+                <TimePicker.RangePicker
+                  style={{width: "550px", marginBottom: '20px',  fontSize: '16px' }}
+                  format="HH시 mm분"
+                  onChange={(times) => {
+                    setStartTime(times[0]);
+                    setEndTime(times[1]);
+                  }}
+                  placeholder={['시작 시간', '종료 시간']}
+                  minuteStep={60}
+                  size={"large"}
+                  picker={{
+                    style: { width: "150px", height: "70px", fontSize: "20px", marginBottom: '20px' },
+                  }}
+                />
+              </ConfigProvider>
 
               <Form.Item style={{ width: "100%", textAlign: "center" }}>
-              <Button
+                <Button
                   type="primary"
                   htmlType="submit"
-                  onClick={this.handleConfirm}
+                  onClick={handleCreateEvent}
                   disabled={
-                    !this.state.selectedDates.length ||
-                    !this.state.startTime ||
-                    !this.state.endTime ||
-                    !this.state.eventName
+                    !selectedDates.length ||
+                    !startTime ||
+                    !endTime ||
+                    !eventName
                   }
+                  style={{ width: "400px", height: "45px", fontSize: "14px" }}
+                >
+                  이벤트 생성
+                </Button>
+              </Form.Item>
+            </div>
+          </Card>
+
+          <Card title="UUID 입력" style={{ width: 600 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <h3 style={{ textAlign: "center" }}>UUID</h3>
+              <Form.Item
+                name="uuid"
+                rules={[{ required: true, message: "UUID를 입력해주세요" }]}
+                style={{ width: "550px", height: "30px", fontSize: "20px" }}
+              >
+                <Input 
+                  onChange={handleUuidChange} 
+                  style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
+                  placeholder="UUID를 입력해주세요." 
+                  size={"large"}
+                />
+              </Form.Item>
+
+              <Form.Item style={{ width: "100%", textAlign: "center" }}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  onClick={handleConfirm}
+                  disabled={!uuid}
                   style={{ width: "400px", height: "45px", fontSize: "14px" }}
                 >
                   확인
                 </Button>
-                </Form.Item>
-
+              </Form.Item>
             </div>
-          </main>
+          </Card>
+        </div>
+      </main>
 
-        {/* <Footer/> */}
+      {/* 로그인 성공 컴포넌트 */}
+      <div>
+        <h2>로그인 성공!</h2>
+        {userInfo ? (
+          <div>
+            <p>{userInfo.id.toString()}, 안녕하세요 {userInfo.kakao_account.profile.nickname}님!</p>
+          </div>
+        ) : (
+          <p>사용자 정보를 불러오는 중...</p>
+        )}
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default CreateEvent;

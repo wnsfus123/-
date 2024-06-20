@@ -5,7 +5,10 @@ import CreateEvent from "./CreateEvent";
 import EventPage from "./EventPage";
 import TimeTest from "./TimeTest";
 import AddLayout from "./Components/AddLayout";
-
+import Socialkakao from "./Components/Socialkakao";
+import GetToken from "./GetToken";
+import LoginSuccess from "./LoginSuccess";
+import Loginpage from "./Loginpage";
 
 const App = () => {
   return (
@@ -13,10 +16,13 @@ const App = () => {
         <Router> {/* BrowserRouter로 변경 */}
           <Routes> 
             <Route path="/" element={<AddLayout />}>
-              <Route path="/main" element={<CreateEvent />} />
+              <Route path="/create" element={<CreateEvent />} />
+              <Route path="/main" element={<Loginpage />} />
               <Route path="/test" element={<EventPage />} />
               <Route path="/test/:uuid" element={<EventPage />} />
               <Route path="/time" element={<TimeTest />} />
+              <Route path='/auth' element={<GetToken />} />
+              <Route path='/LoginSuccess' element={<LoginSuccess/>} />
             </Route>
             <Route index={true} element={<Navigate replace to={"/main"}/>} />
           </Routes>
