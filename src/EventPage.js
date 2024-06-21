@@ -3,7 +3,8 @@ import axios from "axios";
 import moment from "moment";
 import { Button, Card, Typography, Row, Col, message, Tooltip } from "antd";
 import ScheduleSelector from "react-schedule-selector";
-import Header from "./Components/MoHeader";
+import { checkKakaoLoginStatus, getUserInfoFromLocalStorage, clearUserInfoFromLocalStorage } from './Components/authUtils';
+import Socialkakao from "./Components/Socialkakao";
 import './App.css';
 
 const { Title, Text } = Typography;
@@ -16,6 +17,27 @@ function EventPage() {
   const [loading, setLoading] = useState(true);
   const [allSchedules, setAllSchedules] = useState([]);
   const [userSchedules, setUserSchedules] = useState({});
+  const [userInfo, setUserInfo] = useState(null);
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const savedAccessToken = localStorage.getItem('kakaoAccessToken');
+      if (savedAccessToken) {
+        const status = await checkKakaoLoginStatus(savedAccessToken);
+        if (status) {
+          const storedUserInfo = getUserInfoFromLocalStorage();
+          if (storedUserInfo) {
+            setUserInfo(storedUserInfo);
+          }
+        } else {
+          clearUserInfoFromLocalStorage();
+          setUserInfo(null);
+        }
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -53,7 +75,7 @@ function EventPage() {
     };
 
     fetchEventData();
-  }, []);
+  }, [userInfo]); // userInfo가 변경될 때마다 fetchEventData를 호출합니다.
 
   const handleConfirm = async () => {
     try {
@@ -62,8 +84,8 @@ function EventPage() {
           const datetime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm").format();
 
           const requestData = {
-            kakaoId: eventData.kakaoId,
-            nickname: eventData.nickname,
+            kakaoId: userInfo.id,
+            nickname: userInfo.kakao_account.profile.nickname,
             event_name: eventData.eventname,
             event_uuid: eventData.uuid,
             event_datetime: datetime,
@@ -94,6 +116,10 @@ function EventPage() {
 
   if (loading) {
     return <p>Loading...</p>;
+  }
+
+  if (!userInfo) {
+    return <Socialkakao />;
   }
 
   if (!eventData) {

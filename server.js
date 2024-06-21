@@ -3,8 +3,8 @@ const path = require('path');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
 const moment = require('moment-timezone');
-const session = require('express-session'); // 세션 관리를 위한 모듈 추가
-const axios = require('axios'); // Kakao API 호출을 위한 axios 추가
+const session = require('express-session');
+const axios = require('axios');
 const app = express();
 const http = require('http').createServer(app);
 
@@ -13,10 +13,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // 세션 설정
 app.use(session({
-  secret: 'your-secret-key', // 세션 암호화 키
+  secret: 'your-secret-key',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false, httpOnly: true } // HTTPS를 사용하는 경우 secure: true로 변경
+  cookie: {
+    secure: false, // HTTPS를 사용하는 경우 true로 설정합니다.
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 세션 쿠키의 만료 시간 (예: 24시간)
+  }
 }));
 
 const connection = mysql.createConnection({
@@ -44,7 +48,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/build/index.html'));
 });
 
-// 사용자 로그인 상태 확인 API 추가
 app.get('/api/check-login-status', (req, res) => {
   if (req.session.userInfo) {
     res.json({ isLoggedIn: true, userInfo: req.session.userInfo });
@@ -53,11 +56,9 @@ app.get('/api/check-login-status', (req, res) => {
   }
 });
 
-// 사용자 로그인 처리 API 추가
 app.post('/api/login', (req, res) => {
   const { token } = req.body;
 
-  // Kakao API를 사용하여 사용자 정보 가져오기
   axios.get('https://kapi.kakao.com/v2/user/me', {
     headers: { Authorization: `Bearer ${token}` }
   })
@@ -70,12 +71,12 @@ app.post('/api/login', (req, res) => {
   });
 });
 
-// 사용자 로그아웃 처리 API 추가
 app.post('/api/logout', (req, res) => {
-  req.session.destroy(); // 세션 삭제
+  req.session.destroy();
   res.json({ success: true });
 });
 
+// 이벤트 생성 API
 app.post("/api/events", (req, res) => {
   const { uuid, eventName, startDay, endDay, startTime, endTime, kakaoId, nickname, createDay } = req.body;
 

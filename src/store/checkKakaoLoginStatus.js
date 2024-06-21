@@ -1,16 +1,15 @@
-import create from 'zustand';
-import { persist } from 'zustand/middleware';
+import axios from 'axios';
 
-const useUserStore = create(persist(
-  (set) => ({
-    userInfo: null,
-    setUserInfo: (userInfo) => set({ userInfo }),
-    clearUserInfo: () => set({ userInfo: null })
-  }),
-  {
-    name: 'user-storage', // 세션 스토리지에 저장될 이름
-    getStorage: () => sessionStorage, // 기본값은 localStorage
+const checkKakaoLoginStatus = async (accessToken) => {
+  try {
+    const response = await axios.get('https://kapi.kakao.com/v2/user/me', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    return response.status === 200;
+  } catch (error) {
+    console.error('Error checking Kakao login status:', error);
+    return false;
   }
-));
+};
 
-export default useUserStore;
+export default checkKakaoLoginStatus;
