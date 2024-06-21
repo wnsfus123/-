@@ -179,6 +179,20 @@ app.post("/api/save-user-info", (req, res) => {
   });
 });
 
+app.delete("/api/delete-event-schedule", (req, res) => {
+  const { kakaoId, event_uuid } = req.body;
+
+  connection.query("DELETE FROM eventschedule WHERE kakaoId = ? AND event_uuid = ?", [kakaoId, event_uuid], (error, results, fields) => {
+    if (error) {
+      console.error("이벤트 스케줄 삭제 중 오류 발생:", error);
+      res.status(500).send("이벤트 스케줄 삭제 중 오류 발생");
+      return;
+    }
+
+    res.status(200).send("이벤트 스케줄이 성공적으로 삭제되었습니다.");
+  });
+});
+
 app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, '/build/index.html'));
 });
