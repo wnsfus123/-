@@ -115,7 +115,7 @@ app.post("/api/save-event-schedule", (req, res) => {
     event_datetime: event_datetime
   };
 
-  connection.query('INSERT INTO EventSchedule SET ?', eventData, (error, results, fields) => {
+  connection.query('INSERT INTO eventschedule SET ?', eventData, (error, results, fields) => {
     if (error) {
       console.error('이벤트 스케줄 추가 중 오류 발생:', error);
       res.status(500).send('이벤트 스케줄 추가 중 오류 발생');
@@ -190,6 +190,21 @@ app.delete("/api/delete-event-schedule", (req, res) => {
     }
 
     res.status(200).send("이벤트 스케줄이 성공적으로 삭제되었습니다.");
+  });
+});
+
+// 서버 코드에 추가
+app.get("/api/events/user/:kakaoId", (req, res) => {
+  const { kakaoId } = req.params;
+
+  connection.query("SELECT * FROM test WHERE kakaoId = ?", [kakaoId], (error, results, fields) => {
+    if (error) {
+      console.error("이벤트를 가져오는 중 오류 발생:", error);
+      res.status(500).send("이벤트를 가져오는 중 오류 발생");
+      return;
+    }
+
+    res.status(200).json(results);
   });
 });
 

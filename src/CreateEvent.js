@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input, Card } from "antd";
+import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input, Card, Modal, List } from "antd";
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import koKR from 'antd/lib/locale/ko_KR';
@@ -19,6 +19,8 @@ const CreateEvent = () => {
   const [uuid, setUuid] = useState("");
   const [userInfo, setUserInfo] = useState(null);
   const [accessToken, setAccessToken] = useState('');
+  const [existingEvents, setExistingEvents] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -30,6 +32,7 @@ const CreateEvent = () => {
           const storedUserInfo = getUserInfoFromLocalStorage();
           if (storedUserInfo) {
             setUserInfo(storedUserInfo);
+            fetchExistingEvents(storedUserInfo.id.toString()); // 사용자 ID를 기반으로 기존 이벤트를 가져옵니다.
           }
         } else {
           clearUserInfoFromLocalStorage();
@@ -40,6 +43,16 @@ const CreateEvent = () => {
 
     checkLoginStatus();
   }, []);
+
+  const fetchExistingEvents = (kakaoId) => {
+    axios.get(`/api/events/user/${kakaoId}`)
+      .then(response => {
+        setExistingEvents(response.data);
+      })
+      .catch(error => {
+        console.error("Error fetching existing events:", error);
+      });
+  };
 
   const handleEventNameChange = (event) => {
     setEventName(event.target.value);
@@ -109,6 +122,18 @@ const CreateEvent = () => {
       });
   };
 
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
   if (!userInfo) {
     return <Socialkakao />;
   }
@@ -118,6 +143,10 @@ const CreateEvent = () => {
       <main className="main-content">
         <h1 style={{ textAlign: "center" }}>이벤트 생성란</h1>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Button type="primary" onClick={showModal} style={{ marginBottom: 20 }}>
+            기존 이벤트 보기
+          </Button>
+          
           <Card title="이벤트 생성" style={{ width: 600, marginBottom: 20 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <h3 style={{ textAlign: "center" }}>이벤트 이름</h3>
@@ -186,28 +215,40 @@ const CreateEvent = () => {
                 rules={[{ required: true, message: "UUID를 입력해주세요" }]}
                 style={{ width: "550px", height: "30px", fontSize: "20px" }}
               >
-                <Input 
-                  onChange={handleUuidChange} 
+                <Input.Search 
+                  onSearch={handleConfirm} 
+                  enterButton="확인"
                   style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
                   placeholder="UUID를 입력해주세요." 
                   size={"large"}
                 />
               </Form.Item>
-
-              <Form.Item style={{ width: "100%", textAlign: "center" }}>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  onClick={handleConfirm}
-                  disabled={!uuid}
-                  style={{ width: "400px", height: "45px", fontSize: "14px" }}
-                >
-                  확인
-                </Button>
-              </Form.Item>
             </div>
           </Card>
         </div>
+
+        <Modal
+          title="기존 이벤트"
+          visible={isModalVisible}
+          onOk={handleOk}
+          onCancel={handleCancel}
+        >
+          <List
+            grid={{ gutter: 16, column: 1 }}
+            dataSource={existingEvents}
+            renderItem={item => (
+              <List.Item>
+                <Card title={item.eventname}>
+                  <p>시작: {item.startday}</p>
+                  <p>종료: {item.endday}</p>
+                  <Button type="primary" onClick={() => window.location.href = `http://localhost:8080/test/?key=${item.uuid}`}>
+                    이벤트 바로가기
+                  </Button>
+                </Card>
+              </List.Item>
+            )}
+          />
+        </Modal>
       </main>
 
       <div>
