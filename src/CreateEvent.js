@@ -76,7 +76,7 @@ const CreateEvent = () => {
     const kakaoId = userInfo.id.toString(); 
     const nickname = userInfo.kakao_account.profile.nickname; 
 
-    window.location.href = `http://localhost:8080/test/?key=${uuid}&kakaoId=${kakaoId}&nickname=${nickname}`;
+    window.location.href = `http://moilkka.vercel.app/test/?key=${uuid}&kakaoId=${kakaoId}&nickname=${nickname}`;
   };
 
   const handleCreateEvent = () => {
@@ -115,7 +115,7 @@ const CreateEvent = () => {
         createDay: createDay
       })
       .then((response) => {
-        window.location.href = `http://localhost:8080/test/?key=${eventUUID}`;
+        window.location.href = `http://moilkka.vercel.app/test/?key=${eventUUID}`;
       })
       .catch((error) => {
         console.error("Error sending data:", error);
@@ -241,7 +241,7 @@ const CreateEvent = () => {
                 <Card title={item.eventname}>
                   <p>시작: {item.startday}</p>
                   <p>종료: {item.endday}</p>
-                  <Button type="primary" onClick={() => window.location.href = `http://localhost:8080/test/?key=${item.uuid}`}>
+                  <Button type="primary" onClick={() => window.location.href = `http://moilkka.vercel.app/test/?key=${item.uuid}`}>
                     이벤트 바로가기
                   </Button>
                 </Card>

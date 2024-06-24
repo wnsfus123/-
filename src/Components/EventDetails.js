@@ -6,7 +6,7 @@ import moment from 'moment';
 const { Title, Text } = Typography;
 
 const EventDetails = ({ eventData, userInfo, handleCopyLink }) => {
-  const shareUrl = `http://localhost:8080/test/?key=${eventData.uuid}`;
+  const shareUrl = `http://moilkka.vercel.app/test/?key=${eventData.uuid}`;
 
   return (
     <Row gutter={16}>

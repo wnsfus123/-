@@ -12,7 +12,7 @@ const Loginpage = () => {
     const handleLoginSuccess = (userInfo) => {
         localStorage.setItem('userInfo', JSON.stringify(userInfo)); // LocalStorage에 사용자 정보 저장
         setUserInfo(userInfo);
-        window.location.href = `http://localhost:8080/test/`;
+        window.location.href = `http://moilkka.vercel.app/test/`;
     };
 
     useEffect(() => {
@@ -48,7 +48,7 @@ const Loginpage = () => {
 
     // 이벤트 생성창 바로가기 핸들러
     const handleCreateEvent = () => {
-        window.location.href = 'http://localhost:8080/create';
+        window.location.href = 'http://moilkka.vercel.app/create';
     };
 
     return (

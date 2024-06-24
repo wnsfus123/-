@@ -150,7 +150,7 @@ function EventPage() {
   };
 
   const handleCopyLink = () => {
-    const link = `http://localhost:8080/test/?key=${eventData.uuid}`;
+    const link = `http://moilkka.vercel.app/test/?key=${eventData.uuid}`;
     navigator.clipboard.writeText(link)
       .then(() => {
         message.success('링크가 클립보드에 복사되었습니다!');
