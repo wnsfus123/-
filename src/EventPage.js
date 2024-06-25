@@ -5,6 +5,7 @@ import { Button, Card, Typography, Row, Col, message, Tooltip } from "antd";
 import ScheduleSelector from "react-schedule-selector";
 import { checkKakaoLoginStatus, getUserInfoFromLocalStorage, clearUserInfoFromLocalStorage } from './Components/authUtils';
 import Socialkakao from "./Components/Socialkakao";
+import KakaoShareButton from "./Components/KakaoShareButton"; // KakaoShareButton import
 import './App.css';
 
 const { Title, Text } = Typography;
@@ -19,6 +20,7 @@ function EventPage() {
   const [userSchedules, setUserSchedules] = useState({});
   const [userInfo, setUserInfo] = useState(null);
   const [userSelectedTimes, setUserSelectedTimes] = useState([]); // 현재 접속한 유저의 이벤트 시간을 저장
+  const [confirmLoading, setConfirmLoading] = useState(false); // Confirm 버튼 비활성화 상태 관리
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -104,6 +106,8 @@ function EventPage() {
 
   const handleConfirm = async () => {
     try {
+      setConfirmLoading(true); // Confirm 버튼 비활성화
+
       // 기존 일정을 삭제
       await axios.delete("/api/delete-event-schedule", {
         data: {
@@ -132,6 +136,8 @@ function EventPage() {
     } catch (error) {
       console.error("Error saving event schedule:", error);
       message.error("Error saving event schedule");
+    } finally {
+      setConfirmLoading(false); // Confirm 버튼 다시 활성화
     }
   };
 
@@ -149,7 +155,7 @@ function EventPage() {
   };
 
   const handleCopyLink = () => {
-    const link = `http://localhost:8080/test/?key=${eventData.uuid}`;
+    const link = `http://9899-203-232-203-105.ngrok-free.app/test/?key=${eventData.uuid}`;
     navigator.clipboard.writeText(link)
       .then(() => {
         message.success('링크가 클립보드에 복사되었습니다!');
@@ -186,39 +192,52 @@ function EventPage() {
   return (
     <div className="App">
       <main className="main-content">
-        <Card style={{ margin: "20px", padding: "20px" }}>
-          <Title level={2}>Event Details</Title>
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
-              <Text strong>Event Name: </Text>
-              <Text>{eventData.eventname}</Text>
-            </Col>
-            <Col span={12}>
-              <Text strong>Event UUID: </Text>
-              <Text>{eventData.uuid}</Text>
-            </Col>
-          </Row>
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
-              <Text strong>Start Day: </Text>
-              <Text>{startDate}</Text>
-            </Col>
-            <Col span={12}>
-              <Text strong>End Day: </Text>
-              <Text>{endDate}</Text>
-            </Col>
-          </Row>
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
-              <Text strong>Start Time: </Text>
-              <Text>{startTime}</Text>
-            </Col>
-            <Col span={12}>
-              <Text strong>End Time: </Text>
-              <Text>{endTime}</Text>
-            </Col>
-          </Row>
-        </Card>
+        <Row gutter={[16, 16]}>
+          <Col span={12}>
+            <Card style={{ margin: "20px", padding: "20px" }}>
+              <Title level={2}>Event Details</Title>
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Text strong>Event Name: </Text>
+                  <Text>{eventData.eventname}</Text>
+                </Col>
+                <Col span={12}>
+                  <Text strong>Event UUID: </Text>
+                  <Text>{eventData.uuid}</Text>
+                </Col>
+              </Row>
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Text strong>Start Day: </Text>
+                  <Text>{startDate}</Text>
+                </Col>
+                <Col span={12}>
+                  <Text strong>End Day: </Text>
+                  <Text>{endDate}</Text>
+                </Col>
+              </Row>
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Text strong>Start Time: </Text>
+                  <Text>{startTime}</Text>
+                </Col>
+                <Col span={12}>
+                  <Text strong>End Time: </Text>
+                  <Text>{endTime}</Text>
+                </Col>
+              </Row>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card style={{ margin: "20px", padding: "20px" }}>
+              <Title level={2}>Share Event</Title>
+              <KakaoShareButton userInfo={userInfo} eventData={eventData} /> {/* KakaoShareButton 추가 */}
+              <Button type="default" onClick={handleCopyLink} style={{ marginTop: "10px" }}>
+                Copy Event Link
+              </Button>
+            </Card>
+          </Col>
+        </Row>
 
         <Row gutter={[16, 16]}>
           <Col span={12}>
@@ -242,7 +261,7 @@ function EventPage() {
                   }}
                 />
               </div>
-              <Button type="primary" onClick={handleConfirm} style={{ marginTop: "20px" }}>
+              <Button type="primary" onClick={handleConfirm} style={{ marginTop: "20px" }} loading={confirmLoading}>
                 Confirm
               </Button>
               {/* 선택된 시간 출력 */}
