@@ -39,7 +39,7 @@ connection.connect(err => {
 });
 
 http.listen(8080, () => {
-  console.log("http://moilkka.vercel.app/ 에서 서비스를 시작합니다.");
+  console.log("http://localhost:8080/ 에서 서비스를 시작합니다.");
 });
 
 app.use(express.static(path.join(__dirname, '/build')));

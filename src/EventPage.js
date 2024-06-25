@@ -5,10 +5,9 @@ import { Button, Card, Typography, Row, Col, message, Tooltip } from "antd";
 import ScheduleSelector from "react-schedule-selector";
 import { checkKakaoLoginStatus, getUserInfoFromLocalStorage, clearUserInfoFromLocalStorage } from './Components/authUtils';
 import Socialkakao from "./Components/Socialkakao";
-import EventDetails from "./Components/EventDetails";
 import './App.css';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 function EventPage() {
   const [eventData, setEventData] = useState(null);
@@ -150,7 +149,7 @@ function EventPage() {
   };
 
   const handleCopyLink = () => {
-    const link = `http://moilkka.vercel.app/test/?key=${eventData.uuid}`;
+    const link = `http://localhost:8080/test/?key=${eventData.uuid}`;
     navigator.clipboard.writeText(link)
       .then(() => {
         message.success('링크가 클립보드에 복사되었습니다!');
@@ -187,7 +186,39 @@ function EventPage() {
   return (
     <div className="App">
       <main className="main-content">
-        <EventDetails eventData={eventData} userInfo={userInfo} handleCopyLink={handleCopyLink} />
+        <Card style={{ margin: "20px", padding: "20px" }}>
+          <Title level={2}>Event Details</Title>
+          <Row gutter={[16, 16]}>
+            <Col span={12}>
+              <Text strong>Event Name: </Text>
+              <Text>{eventData.eventname}</Text>
+            </Col>
+            <Col span={12}>
+              <Text strong>Event UUID: </Text>
+              <Text>{eventData.uuid}</Text>
+            </Col>
+          </Row>
+          <Row gutter={[16, 16]}>
+            <Col span={12}>
+              <Text strong>Start Day: </Text>
+              <Text>{startDate}</Text>
+            </Col>
+            <Col span={12}>
+              <Text strong>End Day: </Text>
+              <Text>{endDate}</Text>
+            </Col>
+          </Row>
+          <Row gutter={[16, 16]}>
+            <Col span={12}>
+              <Text strong>Start Time: </Text>
+              <Text>{startTime}</Text>
+            </Col>
+            <Col span={12}>
+              <Text strong>End Time: </Text>
+              <Text>{endTime}</Text>
+            </Col>
+          </Row>
+        </Card>
 
         <Row gutter={[16, 16]}>
           <Col span={12}>
