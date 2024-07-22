@@ -1,5 +1,9 @@
-React (react, react-dom)
-UI 라이브러리 (antd, react-select, react-calendar, react-datepicker)
-상태 관리 (recoil, zustand)
-네트워킹 (axios, socket.io, socket.io-client)
-날짜 처리 (date-fns, moment, dayjs)
+- React (react, react-dom)
+- 
+- UI 라이브러리 (antd, react-select, react-calendar, react-datepicker)
+- 
+- 상태 관리 (recoil, zustand)
+- 
+- 네트워킹 (axios, socket.io, socket.io-client)
+- 
+- 날짜 처리 (date-fns, moment, dayjs)
