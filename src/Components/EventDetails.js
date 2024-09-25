@@ -6,7 +6,7 @@ import moment from 'moment';
 const { Title, Text } = Typography;
 
 const EventDetails = ({ eventData, userInfo, handleCopyLink }) => {
-  const shareUrl = `http://9899-203-232-203-105.ngrok-free.app/test/?key=${eventData.uuid}`;
+  const shareUrl = `http://localhost:8080/test/?key=${eventData.uuid}`;
 
   return (
     <Row gutter={16}>

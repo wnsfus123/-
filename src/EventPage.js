@@ -155,7 +155,7 @@ function EventPage() {
   };
 
   const handleCopyLink = () => {
-    const link = `http://9899-203-232-203-105.ngrok-free.app/test/?key=${eventData.uuid}`;
+    const link = `http://localhost:8080/test/?key=${eventData.uuid}`;
     navigator.clipboard.writeText(link)
       .then(() => {
         message.success('링크가 클립보드에 복사되었습니다!');
@@ -195,34 +195,34 @@ function EventPage() {
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Card style={{ margin: "20px", padding: "20px" }}>
-              <Title level={2}>Event Details</Title>
+              <Title level={2}>이벤트 세부 정보</Title>
               <Row gutter={[16, 16]}>
                 <Col span={12}>
-                  <Text strong>Event Name: </Text>
+                  <Text strong>이벤트 이름: </Text>
                   <Text>{eventData.eventname}</Text>
                 </Col>
                 <Col span={12}>
-                  <Text strong>Event UUID: </Text>
+                  <Text strong>이벤트 UUID: </Text>
                   <Text>{eventData.uuid}</Text>
                 </Col>
               </Row>
               <Row gutter={[16, 16]}>
                 <Col span={12}>
-                  <Text strong>Start Day: </Text>
+                  <Text strong>시작 날짜: </Text>
                   <Text>{startDate}</Text>
                 </Col>
                 <Col span={12}>
-                  <Text strong>End Day: </Text>
+                  <Text strong>종료 날짜: </Text>
                   <Text>{endDate}</Text>
                 </Col>
               </Row>
               <Row gutter={[16, 16]}>
                 <Col span={12}>
-                  <Text strong>Start Time: </Text>
+                  <Text strong>시작 시간: </Text>
                   <Text>{startTime}</Text>
                 </Col>
                 <Col span={12}>
-                  <Text strong>End Time: </Text>
+                  <Text strong>종료 시간: </Text>
                   <Text>{endTime}</Text>
                 </Col>
               </Row>
@@ -230,10 +230,10 @@ function EventPage() {
           </Col>
           <Col span={12}>
             <Card style={{ margin: "20px", padding: "20px" }}>
-              <Title level={2}>Share Event</Title>
+              <Title level={2}>이벤트 공유</Title>
               <KakaoShareButton userInfo={userInfo} eventData={eventData} /> {/* KakaoShareButton 추가 */}
               <Button type="default" onClick={handleCopyLink} style={{ marginTop: "10px" }}>
-                Copy Event Link
+                이벤트 링크 복사
               </Button>
             </Card>
           </Col>
@@ -242,7 +242,7 @@ function EventPage() {
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Card style={{ margin: "20px", padding: "20px", overflowX: "auto" }}>
-              <Title level={3}>Select Schedule</Title>
+              <Title level={3}>스케줄 선택</Title>
               <div className="schedule-selector-wrapper">
                 <ScheduleSelector
                   selection={schedule}
@@ -262,11 +262,11 @@ function EventPage() {
                 />
               </div>
               <Button type="primary" onClick={handleConfirm} style={{ marginTop: "20px" }} loading={confirmLoading}>
-                Confirm
+                확인
               </Button>
               {/* 선택된 시간 출력 */}
               <Card style={{ margin: "20px", padding: "20px", overflowX: "auto" }}>
-                <Title level={3}>Selected Schedule Times</Title>
+                <Title level={3}>선택된 스케줄 시간</Title>
                 {userSelectedTimes.map((time, index) => (
                   <div key={index}>{time}</div>
                 ))}
@@ -276,7 +276,7 @@ function EventPage() {
 
           <Col span={12}>
             <Card style={{ margin: "20px", padding: "20px", overflowX: "auto" }}>
-              <Title level={3}>Selected Times</Title>
+              <Title level={3}>선택된 시간</Title>
               <div className="schedule-selector-wrapper">
                 <ScheduleSelector
                   selection={schedule}

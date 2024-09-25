@@ -5,7 +5,7 @@ const KakaoShareButton = ({ userInfo, eventData }) => {
   const handleKakaoShare = () => {
     if (!eventData || !userInfo) return;
 
-    const shareUrl = `http://9899-203-232-203-105.ngrok-free.app/test/?key=${eventData.uuid}`;
+    const shareUrl = `http://localhost:8080/test/?key=${eventData.uuid}`;
     const shareMessage = `${userInfo.kakao_account.profile.nickname} 님이 모일까 일정추가를 원해요!
     카카오톡 로그인 후에 일정을 등록해보세요!`;
 

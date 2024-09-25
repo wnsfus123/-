@@ -59,7 +59,7 @@ const CreateEvent = () => {
   };
 
   const handleUuidChange = (event) => {
-    setUuid(event.target.value);
+    setUuid(event.target.value); //사용자가 입력한 UUID를 상태에 저장
   };
 
   const handleConfirm = () => {
@@ -72,11 +72,26 @@ const CreateEvent = () => {
       console.error("로그인 정보가 없습니다.");
       return;
     }
+    axios.get(`/api/events/${uuid}`)
+    .then(response => {
+      if (response.data) {
+        // 이벤트가 존재할 경우, 기존 이벤트 상태 업데이트
+        setExistingEvents([response.data]); // 배열 형태로 업데이트하여 모달에서 표시
+        setIsModalVisible(true); // 모달 열기
+      } else {
+        console.error("해당 UUID에 맞는 이벤트가 없습니다.");
+        alert("해당 UUID에 맞는 이벤트가 없습니다.");
+      }
+    })
+    .catch(error => {
+      console.error("UUID 확인 중 오류 발생:", error);
+      alert("UUID 확인 중 오류가 발생했습니다.");
+    });
 
     const kakaoId = userInfo.id.toString(); 
     const nickname = userInfo.kakao_account.profile.nickname; 
 
-    window.location.href = `http://9899-203-232-203-105.ngrok-free.app/test/?key=${uuid}&kakaoId=${kakaoId}&nickname=${nickname}`;
+    window.location.href = `http://localhost:8080/test/?key=${uuid}&kakaoId=${kakaoId}&nickname=${nickname}`;
   };
 
   const handleCreateEvent = () => {
@@ -115,7 +130,7 @@ const CreateEvent = () => {
         createDay: createDay
       })
       .then((response) => {
-        window.location.href = `http://9899-203-232-203-105.ngrok-free.app/test/?key=${eventUUID}`;
+        window.location.href = `http://localhost:8080/test/?key=${eventUUID}`;
       })
       .catch((error) => {
         console.error("Error sending data:", error);
@@ -221,6 +236,8 @@ const CreateEvent = () => {
                   style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
                   placeholder="UUID를 입력해주세요." 
                   size={"large"}
+                  value={uuid} // 상태 연결
+                  onChange={handleUuidChange} // 핸들러 추가
                 />
               </Form.Item>
             </div>
@@ -241,7 +258,7 @@ const CreateEvent = () => {
                 <Card title={item.eventname}>
                   <p>시작: {item.startday}</p>
                   <p>종료: {item.endday}</p>
-                  <Button type="primary" onClick={() => window.location.href = `http://9899-203-232-203-105.ngrok-free.app/test/?key=${item.uuid}`}>
+                  <Button type="primary" onClick={() => window.location.href = `http://localhost:8080/test/?key=${item.uuid}`}>
                     이벤트 바로가기
                   </Button>
                 </Card>

@@ -12,7 +12,7 @@ const Loginpage = () => {
     const handleLoginSuccess = (userInfo) => {
         localStorage.setItem('userInfo', JSON.stringify(userInfo)); // LocalStorage에 사용자 정보 저장
         setUserInfo(userInfo);
-        window.location.href = `http://9899-203-232-203-105.ngrok-free.app/`;
+        window.location.href = `http://localhost:8080/`;
     };
 
 
@@ -51,7 +51,7 @@ const Loginpage = () => {
 
         // 이벤트 생성창 바로가기 핸들러
         const handleCreateEvent = () => {
-            window.location.href = 'http://9899-203-232-203-105.ngrok-free.app/create';
+            window.location.href = 'http://localhost:8080/create';
         };
     
     return (
