@@ -116,6 +116,8 @@ function EventPage() {
         },
       });
 
+      const newSchedules = []; // 새로운 스케줄을 저장할 배열
+
       // 새로운 일정을 저장
       for (const [date, times] of Object.entries(selectedTime)) {
         for (const time of times) {
@@ -130,16 +132,31 @@ function EventPage() {
           };
 
           await axios.post("/api/save-event-schedule", requestData);
+
+          // 새로 선택된 시간을 배열에 추가하여 즉시 업데이트에 사용
+          newSchedules.push({
+            event_datetime: datetime,
+            nickname: userInfo.kakao_account.profile.nickname
+          });
         }
       }
-      message.success("일정이 수정되었습니다");
+
+      // 모든 스케줄이 성공적으로 저장된 후, UI에 바로 반영
+      const updatedSchedules = [...allSchedules, ...newSchedules];
+      setAllSchedules(updatedSchedules); // 전체 스케줄 업데이트
+
+      // 유저 선택 시간을 업데이트하여 즉시 반영
+      setUserSelectedTimes(newSchedules.map(schedule => moment(schedule.event_datetime).format("YYYY-MM-DD HH:mm")));
+
+      message.success("일정이 즉시 적용되었습니다");
     } catch (error) {
       console.error("Error saving event schedule:", error);
       message.error("Error saving event schedule");
     } finally {
       setConfirmLoading(false); // Confirm 버튼 다시 활성화
     }
-  };
+};
+
 
   const handleScheduleChange = (newSchedule) => {
     setSchedule(newSchedule);
