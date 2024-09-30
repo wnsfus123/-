@@ -156,24 +156,24 @@ const CreateEvent = () => {
   return (
     <div className="App">
       <main className="main-content">
-        <h1 style={{ textAlign: "center" }}>이벤트 생성란</h1>
+        <h1 style={{ textAlign: "center" }}>일정 생성란</h1>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <Button type="primary" onClick={showModal} style={{ marginBottom: 20 }}>
-            기존 이벤트 보기
+            기존 일정 보기
           </Button>
           
-          <Card title="이벤트 생성" style={{ width: 600, marginBottom: 20 }}>
+          <Card title="일정 생성" style={{ width: 600, marginBottom: 20 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <h3 style={{ textAlign: "center" }}>이벤트 이름</h3>
+              <h3 style={{ textAlign: "center" }}>일정 이름</h3>
               <Form.Item
                 name="eventName"
-                rules={[{ required: true, message: "이벤트 이름을 입력해주세요" }]}
+                rules={[{ required: true, message: "일정 이름을 입력해주세요" }]}
                 style={{ width: "550px", height: "30px", fontSize: "20px" }}
               >
                 <Input 
                   onChange={handleEventNameChange} 
                   style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
-                  placeholder="이벤트 이름을 입력해주세요." 
+                  placeholder="일정 이름을 입력해주세요." 
                   size={"large"}
                 />
               </Form.Item>
@@ -216,7 +216,7 @@ const CreateEvent = () => {
                   }
                   style={{ width: "400px", height: "45px", fontSize: "14px" }}
                 >
-                  이벤트 생성
+                  일정 생성
                 </Button>
               </Form.Item>
             </div>
@@ -245,7 +245,7 @@ const CreateEvent = () => {
         </div>
 
         <Modal
-          title="기존 이벤트"
+          title="기존 일정"
           visible={isModalVisible}
           onOk={handleOk}
           onCancel={handleCancel}
@@ -259,7 +259,7 @@ const CreateEvent = () => {
                   <p>시작: {item.startday}</p>
                   <p>종료: {item.endday}</p>
                   <Button type="primary" onClick={() => window.location.href = `http://localhost:8080/test/?key=${item.uuid}`}>
-                    이벤트 바로가기
+                    일정 바로가기
                   </Button>
                 </Card>
               </List.Item>

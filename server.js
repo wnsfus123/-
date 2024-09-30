@@ -48,6 +48,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/build/index.html'));
 });
 
+
 app.get('/api/check-login-status', (req, res) => {
   if (req.session.userInfo) {
     res.json({ isLoggedIn: true, userInfo: req.session.userInfo });

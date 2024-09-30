@@ -212,14 +212,14 @@ function EventPage() {
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Card style={{ margin: "20px", padding: "20px" }}>
-              <Title level={2}>이벤트 세부 정보</Title>
+              <Title level={2}>일정 세부 정보</Title>
               <Row gutter={[16, 16]}>
                 <Col span={12}>
-                  <Text strong>이벤트 이름: </Text>
+                  <Text strong>일정 이름: </Text>
                   <Text>{eventData.eventname}</Text>
                 </Col>
                 <Col span={12}>
-                  <Text strong>이벤트 UUID: </Text>
+                  <Text strong>일정 UUID: </Text>
                   <Text>{eventData.uuid}</Text>
                 </Col>
               </Row>
@@ -247,10 +247,10 @@ function EventPage() {
           </Col>
           <Col span={12}>
             <Card style={{ margin: "20px", padding: "20px" }}>
-              <Title level={2}>이벤트 공유</Title>
+              <Title level={2}>일정 공유</Title>
               <KakaoShareButton userInfo={userInfo} eventData={eventData} /> {/* KakaoShareButton 추가 */}
               <Button type="default" onClick={handleCopyLink} style={{ marginTop: "10px" }}>
-                이벤트 링크 복사
+                일정 링크 복사
               </Button>
             </Card>
           </Col>

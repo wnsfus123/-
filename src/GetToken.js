@@ -52,7 +52,7 @@ const GetToken = () => {
           const userInfo = userInfoResponse.data;
           localStorage.setItem('userInfo', JSON.stringify(userInfo));
 
-          navigate('/create');
+          navigate('/event');
         } catch (err) {
           console.warn(err);
         }
