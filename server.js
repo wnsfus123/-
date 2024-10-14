@@ -17,9 +17,9 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: {
-    secure: false, // HTTPS를 사용하는 경우 true로 설정합니다.
+    secure: false,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 세션 쿠키의 만료 시간 (예: 24시간)
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
@@ -27,7 +27,7 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '1234',
-  database: 'mysql'
+  database: 'mysql80'
 });
 
 connection.connect(err => {
@@ -36,6 +36,42 @@ connection.connect(err => {
     return;
   }
   console.log('MySQL 데이터베이스에 연결되었습니다.');
+
+  // 테이블 생성
+  const createTables = () => {
+    const tableQueries = [
+      `CREATE TABLE IF NOT EXISTS test (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        kakaoId VARCHAR(20) NOT NULL,
+        nickname VARCHAR(20) NOT NULL,
+        uuid VARCHAR(20) NOT NULL,
+        eventname VARCHAR(20) NOT NULL,
+        startday TIMESTAMP,
+        endday TIMESTAMP,
+        createday TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS eventschedule(
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        kakaoId VARCHAR(20) NOT NULL,
+        nickname VARCHAR(20) NOT NULL,
+        event_name VARCHAR(20) NOT NULL,
+        event_uuid VARCHAR(20) NOT NULL,
+        event_datetime TIMESTAMP
+      )`
+    ];
+    
+    tableQueries.forEach(query => {
+      connection.query(query, (err, results) => {
+        if (err) {
+          console.error('테이블 생성 중 오류 발생:', err);
+        } else {
+          console.log('테이블이 생성되었거나 이미 존재합니다.');
+        }
+      });
+    });
+  };
+
+  createTables(); // 테이블 생성 함수 호출
 });
 
 http.listen(8080, () => {
@@ -48,7 +84,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/build/index.html'));
 });
 
-
+// 로그인 상태 확인
 app.get('/api/check-login-status', (req, res) => {
   if (req.session.userInfo) {
     res.json({ isLoggedIn: true, userInfo: req.session.userInfo });
@@ -57,6 +93,7 @@ app.get('/api/check-login-status', (req, res) => {
   }
 });
 
+// 로그인 처리
 app.post('/api/login', (req, res) => {
   const { token } = req.body;
 
@@ -72,12 +109,13 @@ app.post('/api/login', (req, res) => {
   });
 });
 
+// 로그아웃 처리
 app.post('/api/logout', (req, res) => {
   req.session.destroy();
   res.json({ success: true });
 });
 
-// 이벤트 생성 API
+// 이벤트 생성
 app.post("/api/events", (req, res) => {
   const { uuid, eventName, startDay, endDay, startTime, endTime, kakaoId, nickname, createDay } = req.body;
 
@@ -105,6 +143,7 @@ app.post("/api/events", (req, res) => {
   });
 });
 
+// 이벤트 스케줄 저장
 app.post("/api/save-event-schedule", (req, res) => {
   const { kakaoId, nickname, event_name, event_uuid, event_datetime } = req.body;
 
@@ -127,6 +166,7 @@ app.post("/api/save-event-schedule", (req, res) => {
   });
 });
 
+// 특정 이벤트 조회
 app.get("/api/events/:uuid", (req, res) => {
   const { uuid } = req.params;
 
@@ -147,6 +187,7 @@ app.get("/api/events/:uuid", (req, res) => {
   });
 });
 
+// 특정 이벤트 스케줄 조회
 app.get("/api/event-schedules/:uuid", (req, res) => {
   const { uuid } = req.params;
 
@@ -161,25 +202,7 @@ app.get("/api/event-schedules/:uuid", (req, res) => {
   });
 });
 
-app.post("/api/save-user-info", (req, res) => {
-  const { kakaoId, nickname } = req.body;
-
-  const userInfo = {
-    user_id: kakaoId,
-    nickname: nickname
-  };
-
-  connection.query('INSERT INTO users SET ?', userInfo, (error, results, fields) => {
-    if (error) {
-      console.error('사용자 정보 추가 중 오류 발생:', error);
-      res.status(500).send('사용자 정보 추가 중 오류 발생');
-      return;
-    }
-
-    res.status(200).send('사용자 정보가 성공적으로 추가되었습니다.');
-  });
-});
-
+// 이벤트 스케줄 삭제
 app.delete("/api/delete-event-schedule", (req, res) => {
   const { kakaoId, event_uuid } = req.body;
 
@@ -194,7 +217,7 @@ app.delete("/api/delete-event-schedule", (req, res) => {
   });
 });
 
-// 서버 코드에 추가
+// 사용자의 모든 이벤트 조회
 app.get("/api/events/user/:kakaoId", (req, res) => {
   const { kakaoId } = req.params;
 
