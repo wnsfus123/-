@@ -26,27 +26,32 @@ const ExistingEvents = ({ userInfo }) => {
 
   const showEventDetails = (uuid) => {
     setIsModalVisible(true);
+    
+    // 이벤트 및 참여자 정보를 가져오기 위한 API 호출
     axios.get(`/api/event-schedules/details/${uuid}`)
       .then(response => {
-        console.log("상세 이벤트 정보:", response.data); // Log the entire response
+        console.log("상세 이벤트 정보:", response.data);
+        
         const { eventDetails, participants, creator } = response.data;
-
-        // Check if creator exists
+  
+        // creator 정보가 없을 경우 서버 응답 확인
         if (!creator) {
           console.error("Creator 정보가 없습니다.");
         }
-
+  
+        // 데이터를 설정할 때 기본값을 설정
         setSelectedEventDetails({
           ...eventDetails,
-          participants,
-          creator: creator || { nickname: "알 수 없음" }, // 대체 값 추가
+          participants: participants.length > 0 ? participants : [],  // 참여자가 없으면 빈 배열
+          creator: creator ? creator : { nickname: "알 수 없음" },    // 생성자가 없을 때 기본값
         });
       })
       .catch(error => {
         console.error("Error fetching event details:", error);
         setIsModalVisible(false); // 오류 발생 시 모달 닫기
       });
-};
+  };
+  
 
 
   const closeModal = () => {
