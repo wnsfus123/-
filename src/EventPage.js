@@ -107,7 +107,7 @@ function EventPage() {
   const handleConfirm = async () => {
     try {
       setConfirmLoading(true); // Confirm 버튼 비활성화
-
+  
       // 기존 일정을 삭제
       await axios.delete("/api/delete-event-schedule", {
         data: {
@@ -115,24 +115,24 @@ function EventPage() {
           event_uuid: eventData.uuid,
         },
       });
-
+  
       const newSchedules = []; // 새로운 스케줄을 저장할 배열
-
+  
       // 새로운 일정을 저장
-      for (const [date, times] of Object.entries(selectedTime)) {
-        for (const time of times) {
-          const datetime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm").format();
+    for (const [date, times] of Object.entries(selectedTime)) {
+      for (const time of times) {
+        const datetime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm").format();
 
-          const requestData = {
-            kakaoId: userInfo.id.toString(),
-            nickname: userInfo.kakao_account.profile.nickname,
-            event_name: eventData.eventname,
-            event_uuid: eventData.uuid,
-            event_datetime: datetime,
-          };
-
+        const requestData = {
+          kakaoId: userInfo.id.toString(),
+          nickname: userInfo.kakao_account.profile.nickname,
+          event_name: eventData.eventname,
+          event_uuid: eventData.uuid,
+          event_datetime: datetime,
+        };
+  
           await axios.post("/api/save-event-schedule", requestData);
-
+  
           // 새로 선택된 시간을 배열에 추가하여 즉시 업데이트에 사용
           newSchedules.push({
             event_datetime: datetime,
@@ -140,22 +140,47 @@ function EventPage() {
           });
         }
       }
-
+  
       // 모든 스케줄이 성공적으로 저장된 후, UI에 바로 반영
       const updatedSchedules = [...allSchedules, ...newSchedules];
       setAllSchedules(updatedSchedules); // 전체 스케줄 업데이트
-
+  
       // 유저 선택 시간을 업데이트하여 즉시 반영
       setUserSelectedTimes(newSchedules.map(schedule => moment(schedule.event_datetime).format("YYYY-MM-DD HH:mm")));
-
+  
+      // 사용자 스케줄을 업데이트하여 새로 선택한 시간이 바로 적용되도록 반영
+      const updatedUserSchedules = { ...userSchedules };
+      newSchedules.forEach((schedule) => {
+        const formattedTime = moment(schedule.event_datetime).format("YYYY-MM-DD HH:mm");
+  
+        // 중복된 사용자 이름을 추가하지 않도록 수정
+        if (!updatedUserSchedules[formattedTime]) {
+          updatedUserSchedules[formattedTime] = [];
+        }
+        
+        // 이미 해당 시간에 사용자의 이름이 포함되어 있는지 확인 후, 추가
+        if (!updatedUserSchedules[formattedTime].includes(schedule.nickname)) {
+          updatedUserSchedules[formattedTime].push(schedule.nickname);
+        }
+      });
+  
+      setUserSchedules(updatedUserSchedules); // UI에서 즉시 반영
+  
       message.success("일정이 즉시 적용되었습니다");
     } catch (error) {
-      console.error("Error saving event schedule:", error);
-      message.error("Error saving event schedule");
+      console.error("일정 저장 오류:", error);
+      message.error("일정 저장 오류");
     } finally {
       setConfirmLoading(false); // Confirm 버튼 다시 활성화
     }
-};
+  };
+  
+  
+  
+  
+  
+  
+
 
 
   const handleScheduleChange = (newSchedule) => {
@@ -310,12 +335,18 @@ function EventPage() {
                     return <div className="time-label">{formattedStartTime} - {formattedEndTime}</div>;
                   }}
                   renderDateCell={(time, selected, innerRef) => {
-                    const occurrences = countOccurrences(time);
-                    const opacity = Math.min(0.1 + occurrences * 0.1, 1);
                     const formattedTime = moment(time).format("YYYY-MM-DD HH:mm");
                     const users = userSchedules[formattedTime] || [];
+                    
+                    // 같은 사용자가 여러 번 선택된 경우 중복 이름을 제거
+                    const uniqueUsers = [...new Set(users)];
+                    
+                    // 사용자 수에 따라 색상 진하기 설정 (중복되면 진해지지 않도록 함)
+                    const occurrences = uniqueUsers.length;
+                    const opacity = Math.min(0.1 + occurrences * 0.1, 1);
+                    
                     return (
-                      <Tooltip title={users.join(", ")} placement="top">
+                      <Tooltip title={uniqueUsers.join(", ")} placement="top">
                         <div
                           ref={innerRef}
                           style={{
@@ -327,7 +358,7 @@ function EventPage() {
                         />
                       </Tooltip>
                     );
-                  }}
+                  }}                  
                 />
               </div>
             </Card>

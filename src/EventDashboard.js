@@ -13,10 +13,10 @@ const EventDashboard = () => {
 
   return (
     <div>
-      <h1>이벤트 대시보드</h1>
+      <h1>일정 대시보드</h1>
       <ExistingEvents userInfo={userInfo} /> {/* 기존 일정 보기 */}
       <Button type="primary" onClick={handleCreateEvent} style={{ marginTop: '20px' }}>
-        이벤트 생성
+        일정 생성
       </Button> {/* 이벤트 생성 버튼 */}
     </div>
   );

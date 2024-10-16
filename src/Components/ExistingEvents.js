@@ -1,4 +1,3 @@
-// Components/ExistingEvents.js
 import React, { useState, useEffect } from "react";
 import { Modal, List, Card, Button } from 'antd';
 import axios from 'axios';
@@ -46,6 +45,8 @@ const ExistingEvents = ({ userInfo }) => {
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
+        okText="확인"  // OK 버튼 텍스트 변경
+        cancelText="취소"  // Cancel 버튼 텍스트 변경
       >
         <List
           grid={{ gutter: 16, column: 1 }}
