@@ -27,7 +27,7 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '1234',
-  database: 'mysql'
+  database: 'mysql80'
 });
 
 connection.connect(err => {
@@ -191,6 +191,7 @@ app.post("/api/save-user-info", (req, res) => {
   });
 });
 
+
 // 특정 이벤트 조회
 app.get("/api/events/:uuid", (req, res) => {
   const { uuid } = req.params;
@@ -287,45 +288,40 @@ app.get('/api/events/user/:kakaoId', async (req, res) => {
 // 상세보기 API 수정
 app.get('/api/event-schedules/details/:uuid', async (req, res) => {
   try {
-      const eventUuid = req.params.uuid;
+    const eventUuid = req.params.uuid;
 
-      // 이벤트 정보 가져오기
-      const eventDetails = await new Promise((resolve, reject) => {
-          connection.query(`SELECT * FROM test WHERE uuid = ?`, [eventUuid], (error, results) => {
-              if (error) return reject(error);
-              resolve(results);
-          });
+    // 이벤트 정보 가져오기
+    const eventDetails = await new Promise((resolve, reject) => {
+      connection.query(`SELECT * FROM test WHERE uuid = ?`, [eventUuid], (error, results) => {
+        if (error) return reject(error);
+        resolve(results);
       });
+    });
 
-      // 참여자 정보 가져오기
-      const participants = await new Promise((resolve, reject) => {
-          connection.query(`SELECT ep.kakaoId, u.nickname, ep.event_datetime 
-              FROM eventschedule ep
-              JOIN users u ON ep.kakaoId = u.user_id
-              WHERE ep.event_uuid = ?`, [eventUuid], (error, results) => {
-              if (error) return reject(error);
-              resolve(results);
-          });
+     // 참여자 정보 가져오기
+     const participants = await new Promise((resolve, reject) => {
+      connection.query(`SELECT ep.kakaoId, ep.nickname, ep.event_datetime 
+          FROM eventschedule ep
+          WHERE ep.event_uuid = ?`, [eventUuid], (error, results) => {
+          if (error) return reject(error);
+          resolve(results);
       });
+  });
 
-      // 생성자 정보 가져오기
-      const creator = await new Promise((resolve, reject) => {
-          connection.query(`SELECT * FROM users WHERE user_id = ?`, [eventDetails[0].kakaoId], (error, results) => {
-              if (error) return reject(error);
-              resolve(results);
-          });
-      });
+    // 생성자 정보는 eventDetails에서 가져오기
+    const creatorNickname = eventDetails[0].nickname; // test 테이블에서 생성자 닉네임 가져오기
 
-      res.json({
-          eventDetails: eventDetails[0], // 이벤트 기본 정보
-          participants: participants, // 이벤트 참여자 정보
-          creator: creator[0] // 생성자 정보 추가
-      });
+    res.json({
+      eventDetails: eventDetails[0], // 이벤트 기본 정보
+      participants: participants, // 이벤트 참여자 정보
+      creator: { nickname: creatorNickname } // test 테이블에서 가져온 생성자 닉네임 추가
+    });
   } catch (error) {
-      console.error("Error fetching event details:", error);
-      res.status(500).json({ error: "Error fetching event details" });
+    console.error("Error fetching event details:", error);
+    res.status(500).json({ error: "Error fetching event details" });
   }
 });
+
 
 app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, '/build/index.html'));
