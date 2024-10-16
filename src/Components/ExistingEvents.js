@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Modal, List, Card, Button } from 'antd';
+import { Modal, List, Card, Button, message } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 
@@ -7,6 +7,9 @@ const ExistingEvents = ({ userInfo }) => {
   const [existingEvents, setExistingEvents] = useState([]);
   const [selectedEventDetails, setSelectedEventDetails] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [deleteConfirmationVisible, setDeleteConfirmationVisible] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+  const [showDeleteButtons, setShowDeleteButtons] = useState(false); // 삭제 버튼 상태 추가
 
   useEffect(() => {
     if (userInfo) {
@@ -27,32 +30,20 @@ const ExistingEvents = ({ userInfo }) => {
   const showEventDetails = (uuid) => {
     setIsModalVisible(true);
     
-    // 이벤트 및 참여자 정보를 가져오기 위한 API 호출
     axios.get(`/api/event-schedules/details/${uuid}`)
       .then(response => {
-        console.log("상세 이벤트 정보:", response.data);
-        
         const { eventDetails, participants, creator } = response.data;
-  
-        // creator 정보가 없을 경우 서버 응답 확인
-        if (!creator) {
-          console.error("Creator 정보가 없습니다.");
-        }
-  
-        // 데이터를 설정할 때 기본값을 설정
         setSelectedEventDetails({
           ...eventDetails,
-          participants: participants.length > 0 ? participants : [],  // 참여자가 없으면 빈 배열
-          creator: creator ? creator : { nickname: "알 수 없음" },    // 생성자가 없을 때 기본값
+          participants: participants.length > 0 ? participants : [],
+          creator: creator ? creator : { nickname: "알 수 없음" },
         });
       })
       .catch(error => {
         console.error("Error fetching event details:", error);
-        setIsModalVisible(false); // 오류 발생 시 모달 닫기
+        setIsModalVisible(false);
       });
   };
-  
-
 
   const closeModal = () => {
     setIsModalVisible(false);
@@ -63,15 +54,55 @@ const ExistingEvents = ({ userInfo }) => {
     return moment(dateString).format('YYYY년 MM월 DD일 HH시');
   };
 
+  const confirmDeleteEvent = (uuid) => {
+    setEventToDelete(uuid);
+    setDeleteConfirmationVisible(true);
+  };
+
+  const handleDeleteEvent = () => {
+    axios.delete('/api/delete-event', {
+      data: { 
+        event_uuid: eventToDelete,
+        kakaoId: userInfo.id.toString() // 현재 Kakao ID 전송
+      }
+    })
+    .then(response => {
+      message.success("일정이 성공적으로 삭제되었습니다.");
+      setExistingEvents(existingEvents.filter(event => event.uuid !== eventToDelete));
+      setDeleteConfirmationVisible(false);
+      setEventToDelete(null);
+    })
+    .catch(error => {
+      console.error("일정 삭제 중 오류 발생:", error);
+      message.error("일정 삭제 중 오류가 발생했습니다.");
+    });
+  };
+  
+
+  const toggleDeleteButtons = () => {
+    setShowDeleteButtons(!showDeleteButtons); // 삭제 버튼 표시 상태 전환
+  };
+
   return (
     <div>
-      <h2>Existing Events</h2>
+      <h2>나의 일정</h2>
+      <Button onClick={toggleDeleteButtons} style={{ marginBottom: 16 }}>
+        {showDeleteButtons ? "삭제 취소" : "일정 삭제"}
+      </Button>
       <List
         grid={{ gutter: 16, column: 4 }}
         dataSource={existingEvents}
         renderItem={event => (
           <List.Item>
-            <Card title={event.eventname}>
+            <Card title={event.eventname} extra={showDeleteButtons ? (
+              <Button 
+                type="text" 
+                onClick={() => confirmDeleteEvent(event.uuid)} 
+                style={{ color: 'red' }}
+              >
+                X
+              </Button>
+            ) : null}>
               <p>{formatDateTime(event.startday)} ~ {formatDateTime(event.endday)}</p>
               <Button onClick={() => showEventDetails(event.uuid)}>상세보기</Button>
               <Button 
@@ -80,42 +111,50 @@ const ExistingEvents = ({ userInfo }) => {
                 href={`http://localhost:8080/test/?key=${event.uuid}`} 
                 target="_blank"
               >
-                이벤트 바로가기
+                일정 바로가기
               </Button>
             </Card>
           </List.Item>
         )}
       />
-     <Modal title="Event Details" visible={isModalVisible} onOk={closeModal} onCancel={closeModal}>
-    {selectedEventDetails ? (
-        <div>
+
+      <Modal
+        title="일정 삭제 확인"
+        visible={deleteConfirmationVisible}
+        onOk={handleDeleteEvent}
+        onCancel={() => setDeleteConfirmationVisible(false)}
+        okText="확인"
+        cancelText="취소"
+      >
+        <p>정말로 삭제하시겠습니까?</p>
+      </Modal>
+
+      <Modal title="일정 세부정보" visible={isModalVisible} onOk={closeModal} onCancel={closeModal} okText="확인" cancelText="취소">
+        {selectedEventDetails ? (
+          <div>
             <p><strong>생성자:</strong> {selectedEventDetails.creator.nickname}</p>
-            <p><strong>이벤트 이름:</strong> {selectedEventDetails.eventname}</p>
+            <p><strong>일정 이름:</strong> {selectedEventDetails.eventname}</p>
             <p><strong>시작일:</strong> {formatDateTime(selectedEventDetails.startday)}</p>
             <p><strong>종료일:</strong> {formatDateTime(selectedEventDetails.endday)}</p>
             <p><strong>참여자:</strong></p>
             <ul>
-                {selectedEventDetails.participants.length > 0 ? (
-                    selectedEventDetails.participants.map((participant, index) => (
-                        <li key={index}>
-                            {participant.nickname} - {moment(participant.event_datetime).format('YYYY년 MM월 DD일 HH시')} // 참여자 이름과 참여 시간 표시
-                        </li>
-                    ))
-                ) : (
-                    <li>참여자가 없습니다.</li> // 참여자가 없을 경우 메시지 표시
-                )}
+              {selectedEventDetails.participants.length > 0 ? (
+                selectedEventDetails.participants.map((participant, index) => (
+                  <li key={index}>
+                    {participant.nickname} - {moment(participant.event_datetime).format('YYYY년 MM월 DD일 HH시')}
+                  </li>
+                ))
+              ) : (
+                <li>참여자가 없습니다.</li>
+              )}
             </ul>
-        </div>
-    ) : (
-        <p>이벤트 세부 정보를 불러오는 중입니다...</p>
-    )}
-</Modal>
-
-
+          </div>
+        ) : (
+          <p>이벤트 세부 정보를 불러오는 중입니다...</p>
+        )}
+      </Modal>
     </div>
   );
 };
 
 export default ExistingEvents;
-
-

@@ -213,6 +213,61 @@ app.get("/api/events/:uuid", (req, res) => {
   });
 });
 
+// 이벤트 삭제
+app.delete('/api/delete-event', (req, res) => {
+  const { event_uuid, kakaoId } = req.body;
+
+  // 이벤트 생성자 확인 쿼리
+  connection.query("SELECT kakaoId FROM test WHERE uuid = ?", [event_uuid], (error, results) => {
+    if (error) {
+      console.error("이벤트 생성자 확인 중 오류 발생:", error);
+      res.status(500).send("이벤트 생성자 확인 중 오류 발생");
+      return;
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send("이벤트를 찾을 수 없습니다.");
+    }
+
+    const creatorKakaoId = results[0].kakaoId;
+
+    if (creatorKakaoId === kakaoId) {
+      // 생성자일 경우 두 테이블에서 삭제
+      connection.query("DELETE FROM test WHERE uuid = ?", [event_uuid], (error) => {
+        if (error) {
+          console.error("이벤트 삭제 중 오류 발생:", error);
+          res.status(500).send("이벤트 삭제 중 오류 발생");
+          return;
+        }
+
+        // eventschedule에서 관련 데이터 삭제
+        connection.query("DELETE FROM eventschedule WHERE event_uuid = ?", [event_uuid], (error) => {
+          if (error) {
+            console.error("참여자 데이터 삭제 중 오류 발생:", error);
+            res.status(500).send("참여자 데이터 삭제 중 오류 발생");
+            return;
+          }
+          
+          res.status(200).send("이벤트가 성공적으로 삭제되었습니다.");
+        });
+      });
+    } else {
+      // 참여자인 경우 eventschedule에서만 삭제
+      connection.query("DELETE FROM eventschedule WHERE event_uuid = ? AND kakaoId = ?", [event_uuid, kakaoId], (error) => {
+        if (error) {
+          console.error("참여자 데이터 삭제 중 오류 발생:", error);
+          res.status(500).send("참여자 데이터 삭제 중 오류 발생");
+          return;
+        }
+        
+        res.status(200).send("참여자 데이터가 성공적으로 삭제되었습니다.");
+      });
+    }
+  });
+});
+
+
+
 // 특정 이벤트 스케줄 조회
 app.get("/api/event-schedules/:uuid", (req, res) => {
   const { uuid } = req.params;
