@@ -27,7 +27,7 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '1234',
-  database: 'mysql80'
+  database: 'mysql'
 });
 
 connection.connect(err => {
@@ -57,6 +57,11 @@ connection.connect(err => {
         event_name VARCHAR(20) NOT NULL,
         event_uuid VARCHAR(20) NOT NULL,
         event_datetime TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        nickname VARCHAR(255) NOT NULL
       )`
     ];
     
@@ -163,6 +168,26 @@ app.post("/api/save-event-schedule", (req, res) => {
     }
 
     res.status(200).send('이벤트 스케줄이 성공적으로 추가되었습니다.');
+  });
+});
+
+// 사용자 정보 저장
+app.post("/api/save-user-info", (req, res) => {
+  const { kakaoId, nickname } = req.body;
+
+  const userInfo = {
+    user_id: kakaoId,
+    nickname: nickname
+  };
+
+  connection.query('INSERT INTO users SET ?', userInfo, (error, results, fields) => {
+    if (error) {
+      console.error('사용자 정보 추가 중 오류 발생:', error);
+      res.status(500).send('사용자 정보 추가 중 오류 발생');
+      return;
+    }
+
+    res.status(200).send('사용자 정보가 성공적으로 추가되었습니다.');
   });
 });
 
