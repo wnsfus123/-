@@ -1,3 +1,4 @@
+// src/components/GetUserInfo.js
 import React, { useEffect } from 'react';
 import axios from 'axios';
 import useUserStore from './store/userStore';
@@ -18,6 +19,7 @@ const GetUserInfo = ({ kakaoAccessToken, fnUserInfoCheck }) => {
         const kakaoId = res.data.id.toString();
         const nickname = res.data.kakao_account.profile.nickname;
 
+        // 사용자 정보를 서버에 전송
         await axios.post('/api/save-user-info', { kakaoId, nickname });
 
         fnUserInfoCheck(kakaoId, nickname);
