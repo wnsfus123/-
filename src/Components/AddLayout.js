@@ -35,7 +35,7 @@ const AppLayout = () => {
               일정 수정
             </Menu.Item>
             <Menu.Item key="3" icon={<QuestionCircleOutlined />}>
-              <Link exact to="/time" />
+              <Link exact to="/help" />
               도움말
             </Menu.Item>
           </Menu>

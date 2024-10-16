@@ -242,19 +242,89 @@ app.delete("/api/delete-event-schedule", (req, res) => {
   });
 });
 
-// 사용자의 모든 이벤트 조회
-app.get("/api/events/user/:kakaoId", (req, res) => {
-  const { kakaoId } = req.params;
+// 현재 db를 connection으로 수정
+app.get('/api/events/user/:kakaoId', async (req, res) => {
+  try {
+      const kakaoId = req.params.kakaoId;
 
-  connection.query("SELECT * FROM test WHERE kakaoId = ?", [kakaoId], (error, results, fields) => {
-    if (error) {
-      console.error("이벤트를 가져오는 중 오류 발생:", error);
-      res.status(500).send("이벤트를 가져오는 중 오류 발생");
-      return;
-    }
+      // 생성자로서의 이벤트 가져오기
+      const createdEvents = await new Promise((resolve, reject) => {
+          connection.query(`SELECT * FROM test WHERE kakaoId = ?`, [kakaoId], (error, results) => {
+              if (error) return reject(error);
+              resolve(results);
+          });
+      });
 
-    res.status(200).json(results);
-  });
+      // 참여자로서 등록된 이벤트 가져오기
+      const participatedEvents = await new Promise((resolve, reject) => {
+          connection.query(`SELECT e.* FROM eventschedule ep JOIN test e ON ep.event_uuid = e.uuid WHERE ep.kakaoId = ?`, [kakaoId], (error, results) => {
+              if (error) return reject(error);
+              resolve(results);
+          });
+      });
+
+      // 생성자로 등록한 이벤트와 참여자로 등록된 이벤트 합치기
+      const allEvents = [...createdEvents, ...participatedEvents];
+
+      // 중복 제거
+      const uniqueEvents = (events) => {
+        const unique = {};
+        events.forEach(event => {
+          if (!unique[event.uuid]) {
+            unique[event.uuid] = event;
+          }
+        });
+        return Object.values(unique);
+      };
+
+      res.json(uniqueEvents(allEvents));
+  } catch (error) {
+      console.error("Error fetching user's events:", error);
+      res.status(500).json({ error: "Error fetching user's events" });
+  }
+});
+
+// 상세보기 API 수정
+app.get('/api/event-schedules/details/:uuid', async (req, res) => {
+  try {
+      const eventUuid = req.params.uuid;
+
+      // 이벤트 정보 가져오기
+      const eventDetails = await new Promise((resolve, reject) => {
+          connection.query(`SELECT * FROM test WHERE uuid = ?`, [eventUuid], (error, results) => {
+              if (error) return reject(error);
+              resolve(results);
+          });
+      });
+
+      // 참여자 정보 가져오기
+      const participants = await new Promise((resolve, reject) => {
+          connection.query(`SELECT ep.kakaoId, u.nickname, ep.event_datetime 
+              FROM eventschedule ep
+              JOIN users u ON ep.kakaoId = u.user_id
+              WHERE ep.event_uuid = ?`, [eventUuid], (error, results) => {
+              if (error) return reject(error);
+              resolve(results);
+          });
+      });
+
+      // 생성자 정보 가져오기
+      const creator = await new Promise((resolve, reject) => {
+          connection.query(`SELECT * FROM users WHERE user_id = ?`, [eventDetails[0].kakaoId], (error, results) => {
+              if (error) return reject(error);
+              resolve(results);
+          });
+      });
+
+      res.json({
+          eventDetails: eventDetails[0], // 이벤트 기본 정보
+          participants: participants, // 이벤트 참여자 정보
+          creator: creator[0] // 생성자 정보 추가
+      });
+  } catch (error) {
+      console.error("Error fetching event details:", error);
+      res.status(500).json({ error: "Error fetching event details" });
+  }
 });
 
 app.get('*', function (req, res) {
