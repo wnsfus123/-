@@ -8,7 +8,7 @@ const MoHeader = ({ colorBgContainer }) => {
     <Header
       style={{
         color: "white",
-        width: "110%",
+        width: "100%",
         height: 72,
         paddingLeft: 20,
         paddingRight: 0,
