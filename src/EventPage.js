@@ -23,6 +23,7 @@ function EventPage() {
   const [userSelectedTimes, setUserSelectedTimes] = useState([]);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false); // 모달 상태 추가
+  const [maxOverlapTimes, setMaxOverlapTimes] = useState([]);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -46,6 +47,7 @@ function EventPage() {
 
   const fetchEventData = async () => {
     try {
+      
       const queryString = window.location.search;
       const urlParams = new URLSearchParams(queryString);
       const uuid = urlParams.get("key");
@@ -87,6 +89,9 @@ function EventPage() {
           selectedTimeByDate[date].push(moment(time).format("HH:mm"));
         });
         setSelectedTime(selectedTimeByDate);
+        const maxOverlaps = findMaxOverlappingTimes(schedulesResponse.data);
+        setMaxOverlapTimes(maxOverlaps);
+        
       }
 
     } catch (error) {
@@ -97,9 +102,12 @@ function EventPage() {
     }
   };
 
+
   useEffect(() => {
     fetchEventData();
   }, [userInfo]);
+
+  
 
   const handleConfirm = async () => {
     try {
@@ -174,7 +182,38 @@ function EventPage() {
   const handleCancel = () => {
     setIsModalVisible(false); // 모달 닫기
   };
-  
+  const findMaxOverlappingTimes = (schedules) => {
+    const timeCounts = {};
+    
+    schedules.forEach(schedule => {
+      const time = moment(schedule.event_datetime).format("YYYY-MM-DD HH:mm");
+      const endTime = moment(time).add(30, 'minutes').format("YYYY-MM-DD HH:mm");
+      
+      // 각 시간대의 겹치는 수 카운트
+      for (let m = moment(time); m.isBefore(endTime); m.add(30, 'minutes')) {
+        const formattedTime = m.format("YYYY-MM-DD HH:mm");
+        if (!timeCounts[formattedTime]) {
+          timeCounts[formattedTime] = 0;
+        }
+        timeCounts[formattedTime]++;
+      }
+    });
+
+    // 겹치는 수가 가장 많은 시간대 찾기
+    const maxCount = Math.max(...Object.values(timeCounts));
+    return Object.entries(timeCounts)
+      .filter(([time, count]) => count === maxCount)
+      .map(([time]) => {
+        const startTime = moment(time);
+        const endTime = startTime.clone().add(30, 'minutes');
+        return {
+          date: startTime.format("YYYY/MM/DD"),
+          start: startTime.format("HH시 mm분"),
+          end: endTime.format("HH시 mm분"),
+        };
+      });
+  };
+
 
   if (loading) {
     return <p>Loading...</p>;
@@ -238,6 +277,9 @@ function EventPage() {
   return (
     <div className="App">
       <main className="main-content">
+      
+
+
             <Row gutter={[16, 16]} >
                 {/* Row for Event Details and Event Management side by side */}
                 <Col span={12}>
@@ -542,6 +584,30 @@ function EventPage() {
             </Card>
           </Col>
         </Row>
+        <Card style={{ margin: "20px", padding: "0px" }}>
+          <Title level={4}>👍 모임 시간으로 적절한 시간을 추천 해드릴께요 !</Title>
+          <Text>🤖 가장 일정이 많이 겹친 시간</Text>
+          {maxOverlapTimes.length > 0 ? (
+            maxOverlapTimes
+              .reduce((acc, curr) => {
+                // 동일한 날짜의 시간을 그룹화
+                const existing = acc.find(item => item.date === curr.date);
+                if (existing) {
+                  existing.times.push(`🕒 ${curr.start} 부터 ${curr.end}까지`);
+                } else {
+                  acc.push({ date: curr.date, times: [`🕒 ${curr.start} 부터 ${curr.end}까지`] });
+                }
+                return acc;
+              }, [])
+              .map((timeInfo, index) => (
+                <div key={index}>
+                  📅 {timeInfo.date} {timeInfo.times.join(", ")}
+                </div>
+              ))
+          ) : (
+            <Text>일정이 없습니다.</Text>
+          )}
+        </Card>
       </main>
     </div>
   );
