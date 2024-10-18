@@ -10,6 +10,7 @@ import LoginSuccess from "./LoginSuccess";
 import Loginpage from "./Loginpage";
 import GoogleCalendar from "./GoogleCalendar";
 import EventDashboard from "./EventDashboard";
+import CombinedPage from "./CombinedPage";
 
 const App = () => {
   return (
@@ -25,7 +26,7 @@ const App = () => {
               <Route path='/auth' element={<GetToken />} />
               <Route path='/LoginSuccess' element={<LoginSuccess/>} />
               <Route path='/google' element={<GoogleCalendar />} />
-              <Route path='/event' element={<EventDashboard />} />
+              <Route path='/event' element={<CombinedPage />} />
             </Route>
             <Route index={true} element={<Navigate replace to={"/main"}/>} />
           </Routes>

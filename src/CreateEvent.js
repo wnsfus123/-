@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input, Card, Modal, List } from "antd";
+import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input, Card, Modal, List,Row,Col } from "antd";
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import koKR from 'antd/lib/locale/ko_KR';
@@ -21,6 +21,7 @@ const CreateEvent = () => {
   const [accessToken, setAccessToken] = useState('');
   const [existingEvents, setExistingEvents] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [availableTimes, setAvailableTimes] = useState([]); // 겹치는 시간대 저장
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -156,52 +157,58 @@ const CreateEvent = () => {
   return (
     <div className="App">
       <main className="main-content">
-        <h1 style={{ textAlign: "center" }}>일정 생성란</h1>
+        <h1 style={{ textAlign: "center" }}>🗓 모임을 새롭게 만들어보세요</h1>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Button type="primary" onClick={showModal} style={{ marginBottom: 20 }}>
-            기존 일정 보기
-          </Button>
-          
-          <Card title="일정 생성" style={{ width: 600, marginBottom: 20 }}>
+
+          <Card title="🗓 모임 일정의 이름과 날짜, 시간을 입력하세요 !" style={{ width: "100%", marginBottom: 20 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <h3 style={{ textAlign: "center" }}>일정 이름</h3>
-              <Form.Item
-                name="eventName"
-                rules={[{ required: true, message: "일정 이름을 입력해주세요" }]}
-                style={{ width: "550px", height: "30px", fontSize: "20px" }}
-              >
-                <Input 
-                  onChange={handleEventNameChange} 
-                  style={{ height: "40px", width: "100%", marginBottom: "10px" }} 
-                  placeholder="일정 이름을 입력해주세요." 
-                  size={"large"}
-                />
-              </Form.Item>
-              <ConfigProvider locale={koKR}>
-                <DatePicker.RangePicker
-                  style={{width: "550px", marginBottom: '20px' }}
-                  format="YYYY년 MM월 DD일"
-                  onChange={(dates) => {
-                    setSelectedDates(dates);
-                  }}
-                  placeholder={['시작 날짜', '종료 날짜']}
-                  size={"large"}
-                />
-                <TimePicker.RangePicker
-                  style={{width: "550px", marginBottom: '20px',  fontSize: '16px' }}
-                  format="HH시 mm분"
-                  onChange={(times) => {
-                    setStartTime(times[0]);
-                    setEndTime(times[1]);
-                  }}
-                  placeholder={['시작 시간', '종료 시간']}
-                  minuteStep={60}
-                  size={"large"}
-                  picker={{
-                    style: { width: "150px", height: "70px", fontSize: "20px", marginBottom: '20px' },
-                  }}
-                />
-              </ConfigProvider>
+              
+              {/* 일정 이름 입력 */}
+              <Row justify="center" style={{ width: "100%", marginBottom: "20px" }}>
+                <Col xs={24} sm={24} md={12} lg={12}> 
+                  <Form.Item
+                    name="eventName"
+                    rules={[{ required: true, message: "일정 이름을 입력해주세요" }]}
+                  >
+                    <Input
+                      onChange={handleEventNameChange}
+                      placeholder="일정 이름을 입력해주세요."
+                      size={"large"}
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* 날짜 선택 */}
+              <Row justify="center" style={{ width: "100%", marginBottom: "20px" }}>
+                <Col xs={24} sm={24} md={12} lg={12}>
+                  <DatePicker.RangePicker
+                    style={{ width: "100%" }}
+                    format="YYYY년 MM월 DD일"
+                    onChange={(dates) => setSelectedDates(dates)}
+                    placeholder={['시작 날짜', '종료 날짜']}
+                    size={"large"}
+                  />
+                </Col>
+              </Row>
+
+              {/* 시간 선택 */}
+              <Row justify="center" style={{ width: "100%", marginBottom: "20px" }}>
+                <Col xs={24} sm={24} md={12} lg={12}>
+                  <TimePicker.RangePicker
+                    style={{ width: "100%" }}
+                    format="HH시 mm분"
+                    onChange={(times) => {
+                      setStartTime(times[0]);
+                      setEndTime(times[1]);
+                    }}
+                    placeholder={['시작 시간', '종료 시간']}
+                    size={"large"}
+                    minuteStep={60}
+                  />
+                </Col>
+              </Row>
 
               <Form.Item style={{ width: "100%", textAlign: "center" }}>
                 <Button
@@ -214,7 +221,7 @@ const CreateEvent = () => {
                     !endTime ||
                     !eventName
                   }
-                  style={{ width: "400px", height: "45px", fontSize: "14px" }}
+                  style={{ width: "100%", height: "45px", fontSize: "14px" }}
                 >
                   일정 생성
                 </Button>
@@ -222,13 +229,13 @@ const CreateEvent = () => {
             </div>
           </Card>
 
-          <Card title="UUID 입력" style={{ width: 600 }}>
+          <Card title="UUID 입력 ❓ UUID는 모임 링크 key= 뒤에서 확인 가능해요 !" style={{ width: "100%" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <h3 style={{ textAlign: "center" }}>UUID</h3>
               <Form.Item
                 name="uuid"
                 rules={[{ required: true, message: "UUID를 입력해주세요" }]}
-                style={{ width: "550px", height: "30px", fontSize: "20px" }}
+                style={{ width: "100%", height: "30px", fontSize: "20px" }}
               >
                 <Input.Search 
                   onSearch={handleConfirm} 
@@ -242,45 +249,31 @@ const CreateEvent = () => {
               </Form.Item>
             </div>
           </Card>
+
+          {/* 기존 일정 모달 */}
+          <Modal title="기존 일정" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+            <List
+              dataSource={existingEvents}
+              renderItem={(item) => (
+                <List.Item>
+                  <List.Item.Meta
+                    title={item.eventName}
+                    description={`시작일: ${item.startDay}, 종료일: ${item.endDay}, 시작시간: ${item.startTime}, 종료시간: ${item.endTime}`}
+                  />
+                </List.Item>
+              )}
+            />
+          </Modal>
         </div>
-
-        <Modal
-          title="기존 일정"
-          visible={isModalVisible}
-          onOk={handleOk}
-          onCancel={handleCancel}
-        >
-          <List
-            grid={{ gutter: 16, column: 1 }}
-            dataSource={existingEvents}
-            renderItem={item => (
-              <List.Item>
-                <Card title={item.eventname}>
-                  <p>시작: {item.startday}</p>
-                  <p>종료: {item.endday}</p>
-                  <Button type="primary" onClick={() => window.location.href = `http://localhost:8080/test/?key=${item.uuid}`}>
-                    일정 바로가기
-                  </Button>
-                </Card>
-              </List.Item>
-            )}
-          />
-        </Modal>
       </main>
-
-      <div>
-        <h2>로그인 성공!</h2>
-        {userInfo ? (
-          <div>
-            <p>{userInfo.id.toString()}, 안녕하세요 {userInfo.kakao_account.profile.nickname}님!</p>
-            <p>Access Token: {accessToken}</p> {/* Access Token을 표시 */}
-          </div>
-        ) : (
-          <p>사용자 정보를 불러오는 중...</p>
-        )}
-      </div>
     </div>
   );
 };
 
-export default CreateEvent;
+const App = () => (
+  <ConfigProvider locale={koKR}>
+    <CreateEvent />
+  </ConfigProvider>
+);
+
+export default App;

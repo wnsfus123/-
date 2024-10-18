@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
+import { Layout } from 'antd';
 
 const { Header } = Layout;
 
@@ -17,7 +17,7 @@ const MoHeader = ({ colorBgContainer }) => {
         zIndex: 1,
         background: colorBgContainer,
         display: "flex",
-        alignItems: "center"
+        alignItems: "center" // 세로 중앙 정렬
       }}
     >
       <a href="http://localhost:8080">
@@ -27,9 +27,9 @@ const MoHeader = ({ colorBgContainer }) => {
           height="64"
           className="d-inline-block align-top logo"
           alt="모일까 로고"
+          style={{ marginTop: '20px',marginLeft: '20px'  }} // 추가: 위쪽으로 약간 밀어주기
         />
       </a>
-
     </Header>
   );
 };

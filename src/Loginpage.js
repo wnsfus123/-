@@ -1,96 +1,54 @@
 import React, { useEffect, useState } from "react";
-import Socialkakao from "./Components/Socialkakao";
-import checkKakaoLoginStatus from "./Components/checkKakaoLoginStatus"; // 로그인 상태 확인 함수 가져오기
+import checkKakaoLoginStatus from "./Components/checkKakaoLoginStatus";
+import useUserStore from "./store/userStore"; // Zustand 스토어 가져오기
 import { Button, Layout, Typography, Space, Card } from 'antd';
+import SocialLogin from "./Components/SocialLogin"; // SocialLogin 컴포넌트를 가져옵니다.
+
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
 const Loginpage = () => {
-    const [userInfo, setUserInfo] = useState(null);
+    const { userInfo, setUserInfo, clearUserInfo } = useUserStore(); // Zustand 스토어에서 사용자 정보 가져오기
+    const [loading, setLoading] = useState(true); // 로딩 상태
 
     // 로그인 성공 시 실행되는 함수
     const handleLoginSuccess = (userInfo) => {
-        localStorage.setItem('userInfo', JSON.stringify(userInfo)); // LocalStorage에 저장
-        sessionStorage.setItem('isLoggedIn', true); // SessionStorage에 로그인 상태 저장
-        setUserInfo(userInfo);
-        window.location.href = `http://localhost:8080/`;
+        setUserInfo(userInfo); // Zustand 스토어에 사용자 정보 저장
+        window.location.href = `http://localhost:8080/event`; // 이벤트 페이지로 리다이렉트
     };
 
     useEffect(() => {
         const checkLoginStatus = async () => {
             const savedAccessToken = localStorage.getItem('kakaoAccessToken');
-            const isLoggedIn = sessionStorage.getItem('isLoggedIn'); // SessionStorage에서 로그인 여부 확인
-            
-            if (savedAccessToken && isLoggedIn) {
+
+            if (savedAccessToken) {
                 const status = await checkKakaoLoginStatus(savedAccessToken);
                 if (status) {
-                    const storedUserInfo = localStorage.getItem('userInfo');
-                    if (storedUserInfo) {
-                        setUserInfo(JSON.parse(storedUserInfo));
-                    }
+                    setLoading(false); // 로그인 상태 확인 후 로딩 종료
+                    window.location.href = `http://localhost:8080/event`; // 로그인 후 이벤트 페이지로 리다이렉트
                 } else {
-                    localStorage.removeItem('kakaoAccessToken');
-                    localStorage.removeItem('userInfo');
-                    sessionStorage.removeItem('isLoggedIn');
-                    setUserInfo(null);
+                    clearUserInfo(); // 로그인 실패 시 사용자 정보 초기화
+                    setLoading(false);
                 }
             } else {
-                // 세션이 없으면 로그인 상태 해제
-                setUserInfo(null);
+                setLoading(false); // 토큰이 없으면 로딩 종료
             }
         };
 
         checkLoginStatus();
-    }, []);
-
-    // 창을 닫을 때 로그아웃 처리
-    useEffect(() => {
-        const handleBeforeUnload = (event) => {
-            if (!event.persisted) { // 창이 캐싱되지 않은 경우에만(새로고침, 링크 방지)
-                localStorage.removeItem('kakaoAccessToken');
-                localStorage.removeItem('userInfo');
-                sessionStorage.removeItem('isLoggedIn'); // 세션에서 로그인 상태 제거
-                setUserInfo(null);
-            }
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
-    }, []);
-
-    // 로그아웃 핸들러
-    const handleLogout = () => {
-        localStorage.removeItem('kakaoAccessToken');
-        localStorage.removeItem('userInfo');
-        sessionStorage.removeItem('isLoggedIn'); // 세션에서 로그인 상태 제거
-        setUserInfo(null);
-        window.location.href = '/';
-    };
-
-    const handleCreateEvent = () => {
-        window.location.href = 'http://localhost:8080/create';
-    };
+    }, [clearUserInfo]);
 
     return (
         <Layout style={{ height: '100vh' }}>
-            <Header style={{ textAlign: 'center', background: '#001529' }}>
-                <Title style={{ color: 'white', margin: 0 }}>로그인 페이지</Title>
-            </Header>
-            <Content style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', padding: '50px' }}>
-                <Card style={{ width: 400, textAlign: 'center', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-                    {userInfo ? (
-                        <Space direction="vertical" align="center">
-                            <Text> 안녕하세요 {userInfo.kakao_account.profile.nickname}님!</Text>
-                            <Button type="primary" onClick={handleCreateEvent}>이벤트 생성창 바로가기</Button>
-                            <Button type="primary" onClick={handleLogout}>로그아웃</Button>
-                        </Space>
+            <Content style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', padding: '0px' }}>
+                <Card style={{ width: 1000, textAlign: 'center', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+                    {loading ? ( // 로딩 중일 때의 처리
+                        <Text>로딩 중...</Text>
+                    ) : userInfo ? (
+                        // 로그인된 경우, 이벤트 페이지로 리다이렉트
+                        null
                     ) : (
-                        <Space direction="vertical" align="center">
-                            <Socialkakao onLoginSuccess={handleLoginSuccess} />
-                        </Space>
+                        <SocialLogin onLoginSuccess={handleLoginSuccess} />
                     )}
                 </Card>
             </Content>

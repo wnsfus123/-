@@ -11,7 +11,7 @@ const EventDetails = ({ eventData, userInfo, handleCopyLink }) => {
   return (
     <Row gutter={16}>
       <Col span={12}>
-        <Card style={{ margin: "20px", padding: "20px" }}>
+        <Card style={{ margin: "20px", padding: "0px" }}>
           <Title level={2}>Event Details</Title>
           <Row gutter={[16, 16]}>
             <Col span={12}>
@@ -46,7 +46,7 @@ const EventDetails = ({ eventData, userInfo, handleCopyLink }) => {
         </Card>
       </Col>
       <Col span={12}>
-        <Card style={{ margin: "20px", padding: "20px", display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <Card style={{ margin: "20px", padding: "0px", display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <KakaoShareButton userInfo={userInfo} eventData={eventData} />
           <Input.Group compact style={{ marginTop: "20px" }}>
             <Input

@@ -35,8 +35,8 @@ const KakaoShareButton = ({ userInfo, eventData }) => {
   };
 
   return (
-    <Button type="primary" onClick={handleKakaoShare} style={{ marginTop: "20px" }}>
-      카카오톡으로 공유하기
+    <Button type="default" onClick={handleKakaoShare} block style={{ marginBottom: "10px" }}>
+      💬 카카오톡으로 공유하기
     </Button>
   );
 };
