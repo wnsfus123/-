@@ -10,6 +10,7 @@ const { Title, Text } = Typography;
 const Loginpage = () => {
     const { userInfo, setUserInfo, clearUserInfo } = useUserStore(); // Zustand 스토어에서 사용자 정보 가져오기
     const [loading, setLoading] = useState(true); // 로딩 상태
+    
 
     // 로그인 성공 시 실행되는 함수
     const handleLoginSuccess = (userInfo) => {

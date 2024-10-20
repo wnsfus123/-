@@ -53,10 +53,10 @@ const AppLayout = () => {
           <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" style={{ height: '100%' }}>
             <Menu.Item key="1" icon={<FormOutlined />}>
               <Link exact to="/main" />
-              일정 생성
+              메인 페이지
             </Menu.Item>
             <Menu.Item key="2" icon={<EditOutlined />}>
-              <Link exact to="/test" />
+              <Link exact to="/google" />
               일정 수정
             </Menu.Item>
             <Menu.Item key="3" icon={<QuestionCircleOutlined />}>

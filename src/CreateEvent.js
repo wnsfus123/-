@@ -189,6 +189,10 @@ const CreateEvent = () => {
                     onChange={(dates) => setSelectedDates(dates)}
                     placeholder={['시작 날짜', '종료 날짜']}
                     size={"large"}
+                    disabledDate={(current) => {
+                      // Disable dates before today
+                      return current && current < dayjs().startOf('day');
+                    }}
                   />
                 </Col>
               </Row>
@@ -266,9 +270,24 @@ const CreateEvent = () => {
           </Modal>
         </div>
       </main>
+
+
+      <div>
+        <h2>로그인 성공!</h2>
+        {userInfo ? (
+          <div>
+            <p>{userInfo.id.toString()}, 안녕하세요 {userInfo.kakao_account.profile.nickname}님!</p>
+            <p>Access Token: {accessToken}</p> {/* Access Token을 표시 */}
+          </div>
+        ) : (
+          <p>사용자 정보를 불러오는 중...</p>
+        )}
+      </div>
     </div>
   );
 };
+    
+
 
 const App = () => (
   <ConfigProvider locale={koKR}>
