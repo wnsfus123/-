@@ -1,62 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { gapi } from 'gapi-script';
-import dayjs from 'dayjs';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+import moment from 'moment'; // moment 라이브러리 사용
+import { Button, List } from 'antd'; // Ant Design의 Button 및 List 컴포넌트 사용
 
-const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-const API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
-const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
-const SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
-
-const LoadGoogleCalendar = () => {
+const GoogleCalendar = ({ scheduleStart, scheduleEnd }) => {
   const [events, setEvents] = useState([]);
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [calendars, setCalendars] = useState([]);
-
+  
   useEffect(() => {
-    const initClient = () => {
-      gapi.client.init({
-        apiKey: API_KEY,
-        clientId: CLIENT_ID,
-        discoveryDocs: DISCOVERY_DOCS,
-        scope: SCOPES,
-      }).then(() => {
-        const authInstance = gapi.auth2.getAuthInstance();
-        setIsSignedIn(authInstance.isSignedIn.get());
-        setIsInitialized(true);
-        authInstance.isSignedIn.listen(setIsSignedIn);
-        console.log('Google API Client initialized');
+    const listCalendars = () => {
+      gapi.client.calendar.calendarList.list().then(response => {
+        const calendars = response.result.items;
+        setCalendars(calendars);
       }).catch(error => {
-        console.error('Error initializing Google API client:', error);
+        console.error('Error fetching calendars:', error);
       });
     };
 
-    gapi.load('client:auth2', initClient);
+    listCalendars();
   }, []);
-
-  const handleSignInClick = () => {
-    gapi.auth2.getAuthInstance().signIn().catch(error => {
-      console.error('Error signing in:', error);
-    });
-  };
-
-  const handleSignOutClick = () => {
-    gapi.auth2.getAuthInstance().signOut().catch(error => {
-      console.error('Error signing out:', error);
-    });
-  };
-
-  const listCalendars = () => {
-    gapi.client.calendar.calendarList.list().then(response => {
-      const calendars = response.result.items;
-      console.log('User calendars:', calendars);
-      setCalendars(calendars);
-    }).catch(error => {
-      console.error('Error fetching calendars:', error);
-    });
-  };
 
   const fetchEvents = (calendarId) => {
     const now = new Date();
@@ -71,66 +33,56 @@ const LoadGoogleCalendar = () => {
       'maxResults': 1000,
       'orderBy': 'startTime'
     }).then(response => {
-      const events = response.result.items.map(event => ({
-        title: event.summary,
-        start: new Date(event.start.dateTime || event.start.date),
-        end: new Date(event.end.dateTime || event.end.date),
-      }));
-      console.log(`Fetched events from calendar ${calendarId}:`, events);
+      const events = response.result.items.map(event => {
+        const eventDetails = {
+          title: event.summary,
+          start: moment(new Date(event.start.dateTime || event.start.date)),
+          end: moment(new Date(event.end.dateTime || event.end.date)),
+        };
+
+        // 겹치는 일정 확인
+        if (moment(scheduleStart).isBefore(eventDetails.end) && moment(scheduleEnd).isAfter(eventDetails.start)) {
+          console.log(`겹치는 구글 캘린더 일정: ${eventDetails.title}`);
+        }
+
+        return eventDetails;
+      });
+      
       setEvents(events);
     }).catch(error => {
       console.error(`Error fetching events from calendar ${calendarId}:`, error);
     });
   };
 
-  useEffect(() => {
-    if (isSignedIn && isInitialized) {
-      listCalendars();
-    }
-  }, [isSignedIn, isInitialized]);
-
   return (
     <div>
-      <h1>Google Calendar Events</h1>
-      {isSignedIn ? (
-        <div>
-          <button onClick={handleSignOutClick}>Sign Out</button>
-          <h2>Available Calendars</h2>
-          <ul>
-            {calendars.map(calendar => (
-              <li key={calendar.id}>
-                <button onClick={() => fetchEvents(calendar.id)}>
-                  Fetch events from {calendar.summary}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <h2>Calendar</h2>
-          <Calendar
-            tileContent={({ date, view }) => {
-              const event = events.find(event => dayjs(event.start).isSame(date, 'day'));
-              return event ? <p>{event.title}</p> : null;
-            }}
-          />
-          <h2>Events</h2>
-          <ul>
-            {events.length > 0 ? (
-              events.map((event, index) => (
-                <li key={index}>
-                  <strong>{event.title}</strong><br/>
-                  {dayjs(event.start).format('YYYY-MM-DD HH:mm')} - {dayjs(event.end).format('YYYY-MM-DD HH:mm')}
-                </li>
-              ))
-            ) : (
-              <li>No events found</li>
-            )}
-          </ul>
-        </div>
-      ) : (
-        <button onClick={handleSignInClick}>Sign In with Google</button>
-      )}
+      <h2>Available Calendars</h2>
+      <List
+        dataSource={calendars}
+        renderItem={calendar => (
+          <List.Item>
+            <Button onClick={() => fetchEvents(calendar.id)}>
+              {calendar.summary} 일정 불러오기
+            </Button>
+          </List.Item>
+        )}
+      />
+
+      <h2>Events</h2>
+      <ul>
+        {events.length > 0 ? (
+          events.map((event, index) => (
+            <li key={index}>
+              <strong>{event.title}</strong><br/>
+              {moment(event.start).format('YYYY-MM-DD HH:mm')} - {moment(event.end).format('YYYY-MM-DD HH:mm')}
+            </li>
+          ))
+        ) : (
+          <li>No events found</li>
+        )}
+      </ul>
     </div>
   );
 };
 
-export default LoadGoogleCalendar;
+export default GoogleCalendar;

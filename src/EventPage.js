@@ -7,6 +7,9 @@ import ScheduleSelector from "react-schedule-selector";
 import { checkKakaoLoginStatus, getUserInfoFromLocalStorage, clearUserInfoFromLocalStorage } from './Components/authUtils';
 import Socialkakao from "./Components/Socialkakao";
 import KakaoShareButton from "./Components/KakaoShareButton";
+import { initGoogleAPI, signInWithGoogle, isGoogleSignedIn } from './googleAuth'; // 로그인 관련 함수 임포트
+import GoogleCalendar from './GoogleCalendar'; // 구글 캘린더 컴포넌트 임포트
+
 import './App.css';
 
 const { Title, Text } = Typography;
@@ -24,6 +27,9 @@ function EventPage() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false); // 모달 상태 추가
   const [maxOverlapTimes, setMaxOverlapTimes] = useState([]);
+  const [isGoogleLoggedIn, setIsGoogleLoggedIn] = useState(false);
+  const [isGoogleModalVisible, setIsGoogleModalVisible] = useState(false); // 구글 모달 상태 추가
+  
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -41,7 +47,7 @@ function EventPage() {
         }
       }
     };
-
+    initGoogleAPI();
     checkLoginStatus();
   }, []);
 
@@ -171,16 +177,42 @@ function EventPage() {
         console.error('Error copying link:', err);
       });
   };
+
+  const handleGoogleLoginClick = () => {
+    signInWithGoogle()
+      .then(() => {
+        setIsGoogleLoggedIn(isGoogleSignedIn());
+        setIsGoogleModalVisible(true); // 로그인 후 모달을 열기
+      })
+      .catch(error => {
+        console.error('구글 로그인 실패:', error);
+      });
+  };
+
+  const handleModalClose = () => {
+    setIsModalVisible(false); // 모달 닫기
+  };
+  
+  const handleGoogleModalClose = () => {
+    setIsGoogleModalVisible(false); // 모달 닫기
+  };
+
   const showModal = () => {
     setIsModalVisible(true); // 모달 열기
+  };
+
+  const showGoogleModal = () => {
+    setIsGoogleModalVisible(true); // 모달 열기
   };
   
   const handleOk = () => {
     setIsModalVisible(false); // 모달 닫기
+    setIsGoogleModalVisible(false);
   };
   
   const handleCancel = () => {
     setIsModalVisible(false); // 모달 닫기
+    setIsGoogleModalVisible(false);
   };
   const findMaxOverlappingTimes = (schedules) => {
     const timeCounts = {};
@@ -386,14 +418,32 @@ function EventPage() {
                     {/* Google Calendar buttons layout */}
                     <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
                       <Col span={12}>
-                        <Button type="default" block style={{ marginBottom: "10px" }}>
+                        <Button type="default" block style={{ marginBottom: "10px" }} onClick={handleGoogleLoginClick}>
                           📆 구글 캘린더 연동하기
                         </Button>
+                        {isGoogleLoggedIn ? (
+                         <>
+                          <p>구글 로그인 완료</p>
+          
+                         </>
+                     ) : (
+                      <p>구글 로그인 필요</p>
+                     )}
+
                       </Col>
                       <Col span={12}>
-                        <Button type="default" block style={{ marginBottom: "10px" }}>
+                        <Button type="default" block style={{ marginBottom: "10px" }} onClick={() => setIsGoogleModalVisible(true)}>
                           📆 구글 일정 불러오기
                         </Button>
+                        <Modal
+                          title="Google Calendar Events"
+                          visible={isGoogleModalVisible}
+                          onCancel={handleGoogleModalClose}
+                          footer={null}
+                        >
+                          <GoogleCalendar scheduleStart={Schedule_Start} scheduleEnd={Schedule_End} />
+                          {/* 모달 안에 GoogleCalendar 컴포넌트를 표시 */}
+                        </Modal>
                       </Col>
                       <Col span={12}>
                         <Button type="default" block>
