@@ -50,7 +50,7 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd }) => {
       
       setEvents(events);
     }).catch(error => {
-      console.error(`Error fetching events from calendar ${calendarId}:`, error);
+      console.error(`Error fetching events from calendar ${calendarId}:`, error);      //캘린더
     });
   };
 
@@ -74,7 +74,7 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd }) => {
           events.map((event, index) => (
             <li key={index}>
               <strong>{event.title}</strong><br/>
-              {moment(event.start).format('YYYY-MM-DD HH:mm')} - {moment(event.end).format('YYYY-MM-DD HH:mm')}
+              {moment(event.start).format('YYYY-MM-DD HH:mm')} - {moment(event.end).format('YYYY-MM-DD HH:mm')}     
             </li>
           ))
         ) : (
