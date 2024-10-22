@@ -7,7 +7,7 @@ import ScheduleSelector from "react-schedule-selector";
 import { checkKakaoLoginStatus, getUserInfoFromLocalStorage, clearUserInfoFromLocalStorage } from './Components/authUtils';
 import Socialkakao from "./Components/Socialkakao";
 import KakaoShareButton from "./Components/KakaoShareButton";
-import { initGoogleAPI, signInWithGoogle, isGoogleSignedIn } from './googleAuth'; // 로그인 관련 함수 임포트
+import { initGoogleAPI, signInWithGoogle, signOutFromGoogle, isGoogleSignedIn } from './googleAuth'; // 로그인 관련 함수 임포트
 import GoogleCalendar from './GoogleCalendar'; // 구글 캘린더 컴포넌트 임포트
 
 import './App.css';
@@ -27,10 +27,10 @@ function EventPage() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false); // 모달 상태 추가
   const [maxOverlapTimes, setMaxOverlapTimes] = useState([]);
-  const [isGoogleLoggedIn, setIsGoogleLoggedIn] = useState(false);
+  const [isGoogleLoggedIn, setIsGoogleLoggedIn] = useState(false); // 구글 로그인 상태 추가
   const [isGoogleModalVisible, setIsGoogleModalVisible] = useState(false); // 구글 모달 상태 추가
+  const [overlappingEvents, setOverlappingEvents] = useState([]); // 구글 일정과 겹쳐진 일정 상태 추가
   
-
   useEffect(() => {
     const checkLoginStatus = async () => {
       const savedAccessToken = localStorage.getItem('kakaoAccessToken');
@@ -178,15 +178,25 @@ function EventPage() {
       });
   };
 
-  const handleGoogleLoginClick = () => {
-    signInWithGoogle()
-      .then(() => {
-        setIsGoogleLoggedIn(isGoogleSignedIn());
-        setIsGoogleModalVisible(true); // 로그인 후 모달을 열기
-      })
-      .catch(error => {
-        console.error('구글 로그인 실패:', error);
-      });
+  // 구글 로그인 처리
+  const handleGoogleLoginClick = async () => {
+    try {
+      await signInWithGoogle(); // 구글 로그인 팝업 띄우기
+      setIsGoogleLoggedIn(isGoogleSignedIn()); // 로그인 여부 업데이트
+      message.success('구글 로그인 완료!');
+    } catch (error) {
+      console.error('구글 로그인 실패:', error);
+      message.error('구글 로그인에 실패했습니다.');
+    }
+  };
+
+  // 구글 캘린더 불러오기 버튼 클릭 시
+  const handleGoogleCalendarFetch = () => {
+    if (!isGoogleLoggedIn) {
+      message.warning('먼저 구글 캘린더 연동을 완료해주세요!');
+      return;
+    }
+    setIsGoogleModalVisible(true); // 로그인 완료 후에만 모달 열기
   };
 
   const handleModalClose = () => {
@@ -432,7 +442,7 @@ function EventPage() {
 
                       </Col>
                       <Col span={12}>
-                        <Button type="default" block style={{ marginBottom: "10px" }} onClick={() => setIsGoogleModalVisible(true)}>
+                        <Button type="default" block style={{ marginBottom: "10px" }} onClick={handleGoogleCalendarFetch}>
                           📆 구글 일정 불러오기
                         </Button>
                         <Modal
@@ -441,7 +451,7 @@ function EventPage() {
                           onCancel={handleGoogleModalClose}
                           footer={null}
                         >
-                          <GoogleCalendar scheduleStart={Schedule_Start} scheduleEnd={Schedule_End} />
+                          <GoogleCalendar scheduleStart={Schedule_Start} scheduleEnd={Schedule_End} setOverlappingEvents={setOverlappingEvents}/>
                           {/* 모달 안에 GoogleCalendar 컴포넌트를 표시 */}
                         </Modal>
                       </Col>
@@ -547,6 +557,57 @@ function EventPage() {
                     const formattedStartTime = moment(time).format("HH:mm");
                     const formattedEndTime = moment(time).add(30, "minutes").format("HH:mm");
                     return <div className="time-label">{formattedStartTime} - {formattedEndTime}</div>;
+                  }}
+                  renderDateCell={(time, selected, innerRef) => {
+                    const formattedTime = moment(time).format("YYYY-MM-DD HH:mm");
+              
+                    // 겹치는 이벤트 가져오기
+                    const overlapping = overlappingEvents.filter(event => {
+                    const eventStart = moment(event.start);
+                    const eventEnd = moment(event.end);
+                    const timeStart = moment(time);
+                    const timeEnd = moment(time).add(30, 'minutes');
+
+                    return (eventStart.isBefore(timeEnd) && eventEnd.isAfter(timeStart)); // 겹치는지 확인
+                  });
+                              
+                    // 기본 셀 배경색과 선택된 색상 정의
+                    const backgroundColor = selected ? "#1890ff" : "#e6f7ff"; // 선택 시 파란색
+                    const borderColor = selected ? "1px solid blue" : "1px solid #ccc";
+              
+                    return (
+                      <div
+                        ref={innerRef}
+                        style={{
+                          position: "relative",
+                          padding: "5px",
+                          border: borderColor,
+                          height: "100%",
+                          backgroundColor: backgroundColor, // 기본 색상
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#b3e0ff"; // 마우스 오버 시 색상
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = selected ? "#1890ff" : "#e6f7ff"; // 기본 색상으로 복원
+                        }}
+                      >
+                        {/* 겹치는 일정 제목을 셀 중앙에 표시 */}
+                        {overlapping.length > 0 && (
+                          <div style={{
+                            position: "absolute",
+                            top: "50%",
+                            right: "5px",
+                            transform: "translateY(-50%)",
+                            fontSize: "12px",
+                            color: 'red',
+                            textAlign: 'right'
+                          }}>
+                            {overlapping.map(event => event.title).join(", ")}
+                          </div>
+                        )}
+                      </div>
+                    );
                   }}
                 />
               </div>

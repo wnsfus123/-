@@ -3,7 +3,7 @@ import { gapi } from 'gapi-script';
 import moment from 'moment'; // moment 라이브러리 사용
 import { Button, List } from 'antd'; // Ant Design의 Button 및 List 컴포넌트 사용
 
-const GoogleCalendar = ({ scheduleStart, scheduleEnd }) => {
+const GoogleCalendar = ({ scheduleStart, scheduleEnd ,setOverlappingEvents}) => {
   const [events, setEvents] = useState([]);
   const [calendars, setCalendars] = useState([]);
   
@@ -43,6 +43,7 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd }) => {
         // 겹치는 일정 확인
         if (moment(scheduleStart).isBefore(eventDetails.end) && moment(scheduleEnd).isAfter(eventDetails.start)) {
           console.log(`겹치는 구글 캘린더 일정: ${eventDetails.title}`);
+          setOverlappingEvents(prev => [...prev, eventDetails]); // 겹치는 일정 추가
         }
 
         return eventDetails;
