@@ -7,7 +7,7 @@ import ScheduleSelector from "react-schedule-selector";
 import { checkKakaoLoginStatus, getUserInfoFromLocalStorage, clearUserInfoFromLocalStorage } from './Components/authUtils';
 import Socialkakao from "./Components/Socialkakao";
 import KakaoShareButton from "./Components/KakaoShareButton";
-import { initGoogleAPI, signInWithGoogle, signOutFromGoogle, isGoogleSignedIn } from './googleAuth'; // 로그인 관련 함수 임포트
+import { initGoogleAPI, signInWithGoogle, signOutFromGoogle, isGoogleSignedIn, addEventToGoogleCalendar } from './googleAuth'; // 로그인 관련 함수 임포트
 import GoogleCalendar from './GoogleCalendar'; // 구글 캘린더 컴포넌트 임포트
 
 import './App.css';
@@ -198,6 +198,59 @@ function EventPage() {
     }
     setIsGoogleModalVisible(true); // 로그인 완료 후에만 모달 열기
   };
+
+  // 일정 구글 캘린더에 등록하기
+  const handleExportToGoogleCalendar = async () => {
+    if (!isGoogleLoggedIn) {
+      message.warning('먼저 구글 캘린더 연동을 완료해주세요.');
+      return;
+    }
+  
+    // 사용자가 선택한 시간을 연속된 시간 블록으로 변환
+    const continuousTimeRanges = [];
+    userSelectedTimes.forEach((timeRange) => {
+      const startMoment = moment(timeRange, "YYYY-MM-DD HH:mm");
+      const endMoment = moment(startMoment).add(30, 'minutes');
+  
+      // 연속된 시간 범위 추가
+      if (continuousTimeRanges.length === 0) {
+        continuousTimeRanges.push({ start: startMoment, end: endMoment });
+      } else {
+        const lastRange = continuousTimeRanges[continuousTimeRanges.length - 1];
+        if (lastRange.end.isSame(startMoment)) {
+          lastRange.end = endMoment; // 연속된 경우 끝 시간 업데이트
+        } else {
+          continuousTimeRanges.push({ start: startMoment, end: endMoment }); // 새로운 범위 추가
+        }
+      }
+    });
+  
+    // 구글 캘린더에 이벤트 등록
+    for (const range of continuousTimeRanges) {
+      const event = {
+        summary: eventData.eventname, // 이벤트 제목
+        start: {
+          dateTime: range.start.toISOString(), // 시작 시간
+          timeZone: 'Asia/Seoul', // 시간대
+        },
+        end: {
+          dateTime: range.end.toISOString(), // 종료 시간
+          timeZone: 'Asia/Seoul', // 시간대
+        }
+      };
+  
+      try {
+        await addEventToGoogleCalendar(event);
+        message.success('일정이 구글 캘린더에 등록되었습니다.');
+      } catch (error) {
+        console.error('구글 캘린더에 일정 등록 실패:', error);
+        message.error('일정 등록 중 오류가 발생했습니다.');
+      }
+    }
+  };
+  
+
+
 
   const handleModalClose = () => {
     setIsModalVisible(false); // 모달 닫기
@@ -456,7 +509,7 @@ function EventPage() {
                         </Modal>
                       </Col>
                       <Col span={12}>
-                        <Button type="default" block>
+                        <Button type="default" block onClick={handleExportToGoogleCalendar}>
                           📆 구글 캘린더로 내보내기
                         </Button>
                       </Col>
