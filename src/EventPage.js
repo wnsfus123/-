@@ -202,7 +202,7 @@ function EventPage() {
   // 일정 구글 캘린더에 등록하기
   const handleExportToGoogleCalendar = async () => {
     if (!isGoogleLoggedIn) {
-      message.warning('먼저 구글 캘린더 연동을 완료해주세요.');
+      message.warning('먼저 구글 캘린더 연동을 완료해주세요!');
       return;
     }
   

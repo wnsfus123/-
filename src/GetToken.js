@@ -38,10 +38,11 @@ const GetToken = () => {
           });
 
           const token = res.data.access_token;
-          setAccessToken(token);
-          console.log("Access Token:", token);
+          const refreshToken = res.data.refresh_token; // 리프레시 토큰 추가
+          setAccessToken(token);         
 
           localStorage.setItem('kakaoAccessToken', token);
+          localStorage.setItem('kakaoRefreshToken', refreshToken); // 리프레시 토큰 저장
 
           const userInfoResponse = await axios.get("https://kapi.kakao.com/v2/user/me", {
             headers: {
@@ -51,6 +52,18 @@ const GetToken = () => {
 
           const userInfo = userInfoResponse.data;
           localStorage.setItem('userInfo', JSON.stringify(userInfo));
+
+          // 토큰의 유효 기간 (초 단위로)과 발급 시각을 가져옵니다.
+          const expiresIn = res.data.expires_in; // Kakao API 응답에서 유효 기간 가져오기
+          const issuedAt = Math.floor(Date.now() / 1000); // 현재 시간을 초 단위로
+
+          await axios.post('/api/save-token', {
+            kakaoId: userInfo.id,
+            accessToken: token,
+            refreshToken: refreshToken,
+            issuedAt: issuedAt, // 발급 시각 추가
+            expiresIn: expiresIn // 유효 기간 추가
+          });
 
           navigate('/event');
         } catch (err) {
@@ -64,8 +77,7 @@ const GetToken = () => {
 
   return (
     <div>
-      <p>Access Token: {accessToken}</p>
-      <div>로그인 중입니다.</div>
+      <p>로그인 중입니다.</p>
     </div>
   );
 };

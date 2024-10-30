@@ -131,6 +131,11 @@ const ExistingEvents = ({ userInfo }) => {
             </Card>
           </List.Item>
         )}
+        style={{
+          maxHeight: "calc(150px * 6)", // 8개의 카드가 보일 높이만큼 설정
+          overflowY: "auto", // 세로 스크롤 활성화
+          overflowX: "hidden", // 가로 스크롤 숨김
+        }}
       />
 
       <Modal

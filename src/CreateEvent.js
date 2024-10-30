@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input, Card, Modal, List,Row,Col } from "antd";
+import { ConfigProvider, DatePicker, TimePicker, Button, Form, Input, Card, Modal,message, List,Row,Col } from "antd";
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import koKR from 'antd/lib/locale/ko_KR';
 import 'dayjs/locale/ko';
 import dayjs from 'dayjs';
 import moment from 'moment';
-import Socialkakao from "./Components/Socialkakao";
 import { checkKakaoLoginStatus, getUserInfoFromLocalStorage, clearUserInfoFromLocalStorage } from './Components/authUtils';
 
 dayjs.locale('ko');
@@ -65,7 +64,7 @@ const CreateEvent = () => {
 
   const handleConfirm = () => {
     if (!uuid) {
-      console.error("UUID를 입력해주세요");
+      message.warning("UUID를 입력해주세요!");
       return;
     }
 
@@ -79,21 +78,15 @@ const CreateEvent = () => {
         // 이벤트가 존재할 경우, 기존 이벤트 상태 업데이트
         setExistingEvents([response.data]); // 배열 형태로 업데이트하여 모달에서 표시
         setIsModalVisible(true); // 모달 열기
+        window.location.href = `http://localhost:8080/test/?key=${uuid}`;
       } else {
-        console.error("해당 UUID에 맞는 이벤트가 없습니다.");
-        alert("해당 UUID에 맞는 이벤트가 없습니다.");
+        message.warning("해당 UUID에 맞는 모임이 없습니다!");
       }
     })
     .catch(error => {
-      console.error("UUID 확인 중 오류 발생:", error);
-      alert("UUID 확인 중 오류가 발생했습니다.");
+      message.warning("해당 UUID에 맞는 모임이 없습니다!");
     });
-
-    const kakaoId = userInfo.id.toString(); 
-    const nickname = userInfo.kakao_account.profile.nickname; 
-
-    window.location.href = `http://localhost:8080/test/?key=${uuid}&kakaoId=${kakaoId}&nickname=${nickname}`;
-  };
+};
 
   const handleCreateEvent = () => {
     if (selectedDates.length < 2) {
@@ -150,9 +143,7 @@ const CreateEvent = () => {
     setIsModalVisible(false);
   };
 
-  if (!userInfo) {
-    return <Socialkakao />;
-  }
+  
 
   return (
     <div className="App">
@@ -253,21 +244,6 @@ const CreateEvent = () => {
               </Form.Item>
             </div>
           </Card>
-
-          {/* 기존 일정 모달 */}
-          <Modal title="기존 일정" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
-            <List
-              dataSource={existingEvents}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    title={item.eventName}
-                    description={`시작일: ${item.startDay}, 종료일: ${item.endDay}, 시작시간: ${item.startTime}, 종료시간: ${item.endTime}`}
-                  />
-                </List.Item>
-              )}
-            />
-          </Modal>
         </div>
       </main>
 
@@ -276,8 +252,7 @@ const CreateEvent = () => {
         <h2>로그인 성공!</h2>
         {userInfo ? (
           <div>
-            <p>{userInfo.id.toString()}, 안녕하세요 {userInfo.kakao_account.profile.nickname}님!</p>
-            <p>Access Token: {accessToken}</p> {/* Access Token을 표시 */}
+            <p>안녕하세요 {userInfo.kakao_account.profile.nickname}님!</p>
           </div>
         ) : (
           <p>사용자 정보를 불러오는 중...</p>

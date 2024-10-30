@@ -1,4 +1,5 @@
-﻿const express = require('express');
+﻿require('dotenv').config();
+const express = require('express');
 const path = require('path');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
@@ -7,6 +8,36 @@ const session = require('express-session');
 const axios = require('axios');
 const app = express();
 const http = require('http').createServer(app);
+const schedule = require('node-schedule');
+const crypto = require('crypto');
+
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_SECRET_KEY;
+const ALGORITHM = 'aes-256-cbc';
+
+
+// 토큰 암호화
+const encrypt = (text) => {
+  if (typeof text !== 'string') {
+    throw new TypeError("암호화할 데이터는 문자열이어야 합니다.");
+  }
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return iv.toString('hex') + ':' + encrypted;
+};
+
+// 토큰 복호화
+const decrypt = (text) => {
+  const parts = text.split(':');
+  const iv = Buffer.from(parts.shift(), 'hex');
+  const encryptedText = Buffer.from(parts.join(':'), 'hex');
+  const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
+  let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+};
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -22,6 +53,203 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
+
+// KakaoTalk 메시지 보내기 함수
+const sendKakaoMessage = async (accessToken, kakaoId, message) => {
+  try {
+    if (!accessToken) {
+      console.error(`${kakaoId}의 카카오톡 토큰이 없습니다.`);
+      return;
+    }
+    
+    await axios.post('https://kapi.kakao.com/v2/api/talk/memo/default/send', {
+      template_object: JSON.stringify({
+        object_type: 'text',
+        text: message,
+        link: {
+          web_url: "http://localhost:8080/test/",  // 실제 링크 추가 필요
+        },
+      }),
+    }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+    console.log(`${kakaoId}에게 메시지 전송 성공`);
+  } catch (error) {
+    console.error('메시지 전송 실패:', error);
+  }
+};
+
+// 매일 09시에 이벤트 확인
+schedule.scheduleJob('55 21 * * *', async () => { // 매일 09:00 AM에 실행
+  console.log("09시에 이벤트 알림을 확인합니다.");
+
+  const today = moment().tz('Asia/Seoul').startOf('day'); // 오늘 날짜 기준
+  const threeDaysAfter = today.clone().add(3, 'days').format('YYYY-MM-DD');
+  const oneDayAfter = today.clone().add(1, 'days').format('YYYY-MM-DD');
+
+  try {
+     // 3일 후 알람 보낼 이벤트
+     const threeDaysEvents = await new Promise((resolve, reject) => {
+      connection.query(`SELECT kakaoId, eventname FROM test WHERE DATE(startday) = ?`, [threeDaysAfter], (error, results) => {
+        if (error) return reject(error);
+        resolve(results);
+      });
+    });
+
+    // 1일 후 알람 보낼 이벤트
+    const oneDayEvents = await new Promise((resolve, reject) => {
+      connection.query(`SELECT kakaoId, eventname FROM test WHERE DATE(startday) = ?`, [oneDayAfter], (error, results) => {
+        if (error) return reject(error);
+        resolve(results);
+      });
+    });
+
+    // 3일 전 알림 보내기
+    for (const { kakaoId, eventname } of threeDaysEvents) {
+      // tokens 테이블에서 accessToken 조회
+      const tokens = await new Promise((resolve, reject) => {
+        connection.query(
+          `SELECT accessToken FROM tokens WHERE kakaoId = ?`,
+          [kakaoId],
+          (error, results) => {
+            if (error) return reject(error);
+            resolve(results);
+          }
+        );
+      });
+
+      if (tokens.length > 0) {
+        const accessToken = decrypt(tokens[0].accessToken); // 복호화
+        const message = `모일까에서 ${eventname} 모임이 3일 남았어요! 얼른 일정을 등록하고 확인해주세요!`;
+        await sendKakaoMessage(accessToken, kakaoId, message);
+      }
+    }
+
+    // 1일 전 알림 보내기
+    for (const { kakaoId, eventname } of oneDayEvents) {
+      // tokens 테이블에서 accessToken 조회
+      const tokens = await new Promise((resolve, reject) => {
+        connection.query(
+          `SELECT accessToken FROM tokens WHERE kakaoId = ?`,
+          [kakaoId],
+          (error, results) => {
+            if (error) return reject(error);
+            resolve(results);
+          }
+        );
+      });
+
+      if (tokens.length > 0) {
+        const accessToken = decrypt(tokens[0].accessToken); // 복호화
+        const message = `모일까에서 ${eventname} 모임이 1일 남았어요! 얼른 일정을 등록하고 확인해주세요!`;
+        await sendKakaoMessage(accessToken, kakaoId, message);
+      }
+    }
+  } catch (error) {
+    console.error('이벤트 조회 중 오류 발생:', error);
+  }
+});
+
+// 토큰 갱신 함수
+const refreshTokens = async () => {
+  try {
+    const query = 'SELECT * FROM tokens';
+    connection.query(query, async (err, results) => {
+      if (err) {
+        console.error('토큰 조회 오류:', err);
+        return;
+      }
+
+      const currentTime = Math.floor(Date.now() / 1000); // 현재 시간(초 단위)
+
+      for (const row of results) {
+        const { kakaoId, accessToken, refreshToken, issuedAt, expiresIn } = row;
+
+        // 암호화된 토큰 복호화
+        const decryptedAccessToken = decrypt(accessToken);
+        const decryptedRefreshToken = decrypt(refreshToken);
+
+        // Access Token 만료 여부 확인
+        const isAccessTokenExpired = (currentTime - issuedAt) >= expiresIn;
+
+        if (!isAccessTokenExpired) {
+          // Access Token이 유효한 경우
+          console.log(`Access Token이 유효합니다: ${kakaoId}`);
+        } else {
+          // Access Token이 만료된 경우 Refresh Token으로 새로운 Access Token 요청
+          console.log(`Access Token이 만료되어 갱신합니다: ${kakaoId}`);
+
+          try {
+            const response = await axios.post('https://kauth.kakao.com/oauth/token', null, {
+              params: {
+                grant_type: 'refresh_token',
+                client_id: process.env.REACT_APP_KAKAO_REST_API_KEY, // Kakao API 클라이언트 ID
+                refresh_token: decryptedRefreshToken
+              },
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              }
+            });
+
+            
+            const { access_token, refresh_token, expires_in } = response.data;
+
+            
+            // 새로운 토큰 암호화
+            const encryptedAccessToken = encrypt(access_token);
+            const encryptedRefreshToken = refresh_token ? encrypt(refresh_token) : refreshToken;
+
+            // 현재 시간(초 단위) 계산
+            const newIssuedAt = Math.floor(Date.now() / 1000);
+
+            // 새로운 토큰을 데이터베이스에 업데이트
+            const updateQuery = `
+              UPDATE tokens
+              SET accessToken = ?, refreshToken = ?, issuedAt = ?, expiresIn = ?, updatedAt = NOW()
+              WHERE kakaoId = ?
+            `;
+            connection.query(updateQuery, [encryptedAccessToken, encryptedRefreshToken, newIssuedAt, expires_in, kakaoId], (err) => {
+              if (err) {
+                console.error('토큰 업데이트 오류:', err);
+              } else {
+                console.log(`토큰 갱신 완료: ${kakaoId}`);
+              }
+            });
+          } catch (error) {
+            console.error('Refresh Token을 사용한 Access Token 갱신 오류:', error);
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('토큰 갱신 오류:', error);
+  }
+};
+
+// 매일 아침 9시에 토큰 갱신 작업 스케줄링
+schedule.scheduleJob('18 14 * * *', () => {
+  console.log('매일 아침 9시에 토큰 갱신 작업 실행');
+  refreshTokens();
+});
+
+// 매일 자정에 실행될 작업 설정
+schedule.scheduleJob('39 00 * * *', () => {
+  const today = moment().tz('Asia/Seoul').startOf('day'); // 오늘 날짜 기준
+  console.log('자동 삭제 작업이 시작되었습니다:', today.format()); // 한국 시간 기준으로 출력
+
+  const query = `DELETE FROM test WHERE endday < ?`;
+  // moment 객체를 포맷하여 문자열로 변환
+  connection.query(query, [today.format('YYYY-MM-DD HH:mm:ss')], (error, result) => {
+      if (error) {
+          console.error('이벤트 삭제 중 오류 발생:', error);
+          return;
+      }    
+      console.log('지난 날짜의 이벤트가 삭제되었습니다. 삭제된 행 수:', result.affectedRows);
+  });
+});
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -58,10 +286,15 @@ connection.connect(err => {
         event_uuid VARCHAR(20) NOT NULL,
         event_datetime TIMESTAMP
       )`,
-      `CREATE TABLE IF NOT EXISTS users (
+      `CREATE TABLE IF NOT EXISTS tokens (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id VARCHAR(255) NOT NULL,
-        nickname VARCHAR(255) NOT NULL
+        kakaoId VARCHAR(20) NOT NULL UNIQUE,
+        accessToken VARCHAR(255) NOT NULL,
+        refreshToken VARCHAR(255) NOT NULL,
+        issuedAt INT NOT NULL,  
+        expiresIn INT NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`
     ];
     
@@ -170,6 +403,40 @@ app.post("/api/save-event-schedule", (req, res) => {
     res.status(200).send('이벤트 스케줄이 성공적으로 추가되었습니다.');
   });
 });
+
+// 토큰 저장 API
+app.post('/api/save-token', async (req, res) => {
+  const { kakaoId, accessToken, refreshToken, expiresIn } = req.body;
+
+  // 현재 시간(초 단위)
+  const issuedAt = Math.floor(Date.now() / 1000); // 초 단위로 변환
+
+  // accessToken과 refreshToken을 암호화하는 방법
+  try {
+    const encryptedAccessToken = encrypt(accessToken);
+    const encryptedRefreshToken = encrypt(refreshToken);
+    
+    connection.query(
+      `INSERT INTO tokens (kakaoId, accessToken, refreshToken, issuedAt, expiresIn) VALUES (?, ?, ?, ?, ?) 
+        ON DUPLICATE KEY UPDATE accessToken = ?, refreshToken = ?, issuedAt = ?, expiresIn = ?`,
+      [kakaoId, encryptedAccessToken, encryptedRefreshToken, issuedAt, expiresIn, encryptedAccessToken, encryptedRefreshToken, issuedAt, expiresIn],
+      (error, results) => {
+        if (error) {
+          console.error("토큰 저장 중 오류 발생:", error);
+          return res.status(500).send("토큰 저장 중 오류 발생");
+        }
+        res.status(200).send("토큰이 성공적으로 저장되었습니다.");
+      }
+    );
+  } catch (error) {
+    console.error("암호화 중 오류 발생:", error);
+    return res.status(500).send("암호화 중 오류 발생");
+  }
+});
+
+
+
+
 
 // 사용자 정보 저장
 app.post("/api/save-user-info", (req, res) => {
