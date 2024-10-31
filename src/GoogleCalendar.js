@@ -57,7 +57,7 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd ,setOverlappingEvents}) => 
 
   return (
     <div>
-      <h2>Available Calendars</h2>
+      <h2>나의 일정</h2>
       <List
         dataSource={calendars}
         renderItem={calendar => (
@@ -69,7 +69,7 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd ,setOverlappingEvents}) => 
         )}
       />
 
-      <h2>Events</h2>
+      <h2>일정</h2>
       <ul>
         {events.length > 0 ? (
           events.map((event, index) => (
@@ -79,7 +79,7 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd ,setOverlappingEvents}) => 
             </li>
           ))
         ) : (
-          <li>No events found</li>
+          <li>일정이 없습니다.</li>
         )}
       </ul>
     </div>

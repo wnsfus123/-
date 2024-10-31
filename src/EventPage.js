@@ -190,6 +190,22 @@ function EventPage() {
     }
   };
 
+  // 구글 로그아웃 처리
+  const handleGoogleLogoutClick = async () => {
+    if (!isGoogleLoggedIn) {
+      message.warning('먼저 구글 캘린더 연동을 완료해주세요!');
+      return;
+    }
+    try {
+      await signOutFromGoogle(); // 구글 로그아웃
+      setIsGoogleLoggedIn(false); // 로그인 상태 업데이트
+      message.success('구글 로그아웃 완료!');
+    } catch (error) {
+      console.error('구글 로그아웃 실패:', error);
+      message.error('구글 로그아웃에 실패했습니다.');
+    }
+  };
+
   // 구글 캘린더 불러오기 버튼 클릭 시
   const handleGoogleCalendarFetch = () => {
     if (!isGoogleLoggedIn) {
@@ -482,17 +498,8 @@ function EventPage() {
                     <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
                       <Col span={12}>
                         <Button type="default" block style={{ marginBottom: "10px" }} onClick={handleGoogleLoginClick}>
-                          📆 구글 캘린더 연동하기
-                        </Button>
-                        {isGoogleLoggedIn ? (
-                         <>
-                          <p>구글 로그인 완료</p>
-          
-                         </>
-                     ) : (
-                      <p>구글 로그인 필요</p>
-                     )}
-
+                        {isGoogleLoggedIn ? "📆 구글 캘린더 연동완료" : "📆 구글 캘린더 연동하기"}
+                        </Button>                   
                       </Col>
                       <Col span={12}>
                         <Button type="default" block style={{ marginBottom: "10px" }} onClick={handleGoogleCalendarFetch}>
@@ -514,8 +521,8 @@ function EventPage() {
                         </Button>
                       </Col>
                       <Col span={12}>
-                        <Button type="default" block>
-                          📆 다른 버튼
+                        <Button type="default" block style={{ marginBottom: "10px" }} onClick={handleGoogleLogoutClick}>
+                          📆 구글 캘린더 연동해제
                         </Button>
                       </Col>
                     </Row>
@@ -541,6 +548,8 @@ function EventPage() {
                 visible={isModalVisible}
                 onOk={handleOk}
                 onCancel={handleCancel}
+                okText="확인"
+                cancelText="취소"
               >
                 {(() => {
                   const mergedTimes = [];
@@ -753,16 +762,32 @@ function EventPage() {
           <Text>🤖 가장 일정이 많이 겹친 시간</Text>
           {maxOverlapTimes.length > 0 ? (
             maxOverlapTimes
-              .reduce((acc, curr) => {
-                // 동일한 날짜의 시간을 그룹화
-                const existing = acc.find(item => item.date === curr.date);
-                if (existing) {
-                  existing.times.push(`🕒 ${curr.start} 부터 ${curr.end}까지`);
+            .reduce((acc, curr) => {
+              // 동일한 날짜의 시간을 그룹화
+              const existing = acc.find(item => item.date === curr.date);
+              const currentStartTime = moment(curr.start, "HH시 mm분");
+              const currentEndTime = moment(curr.end, "HH시 mm분");
+            
+              if (existing) {
+                const lastTime = existing.times[existing.times.length - 1];
+                const lastStartTime = moment(lastTime.split("부터")[0].replace("🕒 ", ""), "HH시 mm분");
+                const lastEndTime = moment(lastTime.split("부터")[1].trim(), "HH시 mm분");
+            
+                // 연속된 시간인지 확인
+                if (lastEndTime.isSame(currentStartTime)) {
+                  // 연속된 경우 업데이트 (시작 시간은 첫 번째 범위의 시작 시간, 끝 시간은 현재 범위의 끝 시간)
+                  existing.times[existing.times.length - 1] = `🕒 ${lastStartTime.format("HH시 mm분")} 부터 ${currentEndTime.format("HH시 mm분")}까지`;
                 } else {
-                  acc.push({ date: curr.date, times: [`🕒 ${curr.start} 부터 ${curr.end}까지`] });
+                  // 새로운 범위 추가
+                  existing.times.push(`🕒 ${curr.start} 부터 ${curr.end}까지`);
                 }
-                return acc;
-              }, [])
+              } else {
+                // 새로운 날짜와 시간 추가
+                acc.push({ date: curr.date, times: [`🕒 ${curr.start} 부터 ${curr.end}까지`] });
+              }
+              return acc;
+            }, [])
+            
               .map((timeInfo, index) => (
                 <div key={index}>
                   📅 {timeInfo.date} {timeInfo.times.join(", ")}
