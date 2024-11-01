@@ -10,7 +10,12 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd ,setOverlappingEvents}) => 
   useEffect(() => {
     const listCalendars = () => {
       gapi.client.calendar.calendarList.list().then(response => {
-        const calendars = response.result.items;
+        const calendars = response.result.items.map(calendar => ({
+          ...calendar,
+          summary: calendar.summary.includes('@gmail.com')
+            ? calendar.summary.split('@')[0]   // @gmail.com 앞부분만 추출
+            : calendar.summary,
+        }));
         setCalendars(calendars);
       }).catch(error => {
         console.error('Error fetching calendars:', error);
@@ -57,7 +62,7 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd ,setOverlappingEvents}) => 
 
   return (
     <div>
-      <h2>Available Calendars</h2>
+      <h2>나의 일정</h2>
       <List
         dataSource={calendars}
         renderItem={calendar => (
@@ -69,7 +74,7 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd ,setOverlappingEvents}) => 
         )}
       />
 
-      <h2>Events</h2>
+      <h2>일정</h2>
       <ul>
         {events.length > 0 ? (
           events.map((event, index) => (
@@ -79,7 +84,7 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd ,setOverlappingEvents}) => 
             </li>
           ))
         ) : (
-          <li>No events found</li>
+          <li>일정이 없습니다.</li>
         )}
       </ul>
     </div>
