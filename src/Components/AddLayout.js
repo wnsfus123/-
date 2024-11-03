@@ -36,10 +36,10 @@ const AppLayout = () => {
 
       {/* Sider의 zIndex를 낮게 설정하고, overflow 문제를 해결 */}
       <Layout style={{ marginTop: 72 }}>
-        <Sider
-          collapsible
+      <Sider
           collapsed={collapsed}
-          onCollapse={(value) => setCollapsed(value)}
+          onMouseEnter={() => setCollapsed(false)} // Expand on mouse enter
+          onMouseLeave={() => setCollapsed(true)} // Collapse on mouse leave
           style={{ 
             overflow: 'auto',
             height: 'calc(100vh - 72px)', 

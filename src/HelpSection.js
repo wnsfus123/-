@@ -29,9 +29,9 @@ const HelpSection = () => {
   return (
     <div style={{ padding: '20px' }}>
       <h2>도움말 섹션</h2>
-      <Row gutter={16}>
+      <Row gutter={[16, 16]}>
         {helpItems.map((item, index) => (
-          <Col span={6} key={index}>
+          <Col xs={24} sm={12} md={12} lg={6} xl={6} key={index}>
             <Card
               hoverable
               style={{ textAlign: 'center', marginBottom: '20px' }}
