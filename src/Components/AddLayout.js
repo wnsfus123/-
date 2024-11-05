@@ -14,7 +14,7 @@ import MoFooter from "./MoFooter";
 const { Header, Content, Footer, Sider } = Layout;
 
 const AppLayout = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -38,15 +38,15 @@ const AppLayout = () => {
       <Layout style={{ marginTop: 72 }}>
       <Sider
           collapsed={collapsed}
-          onMouseEnter={() => setCollapsed(false)} // Expand on mouse enter
-          onMouseLeave={() => setCollapsed(true)} // Collapse on mouse leave
+          onMouseEnter={() => setCollapsed(false)}
+          onMouseLeave={() => setCollapsed(true)}
           style={{ 
-            overflow: 'auto',
+            overflow: 'hidden',
             height: 'calc(100vh - 72px)', 
             position: 'fixed', 
             left: -7, 
             top: 72, 
-            zIndex: 1 // Header보다 낮은 zIndex 설정
+            zIndex: 1
             
           }}
         >
