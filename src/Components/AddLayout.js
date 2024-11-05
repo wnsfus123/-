@@ -55,11 +55,7 @@ const AppLayout = () => {
               <Link exact to="/main" />
               메인 페이지
             </Menu.Item>
-            <Menu.Item key="2" icon={<EditOutlined />}>
-              <Link exact to="/google" />
-              일정 수정
-            </Menu.Item>
-            <Menu.Item key="3" icon={<QuestionCircleOutlined />}>
+            <Menu.Item key="2" icon={<QuestionCircleOutlined />}>
               <Link exact to="/help" />
               도움말
             </Menu.Item>
