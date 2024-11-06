@@ -10,7 +10,12 @@ const GoogleCalendar = ({ scheduleStart, scheduleEnd ,setOverlappingEvents}) => 
   useEffect(() => {
     const listCalendars = () => {
       gapi.client.calendar.calendarList.list().then(response => {
-        const calendars = response.result.items;
+        const calendars = response.result.items.map(calendar => ({
+          ...calendar,
+          summary: calendar.summary.includes('@gmail.com')
+            ? calendar.summary.split('@')[0]   // @gmail.com 앞부분만 추출
+            : calendar.summary,
+        }));
         setCalendars(calendars);
       }).catch(error => {
         console.error('Error fetching calendars:', error);

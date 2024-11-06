@@ -506,7 +506,7 @@ function EventPage() {
                           📆 구글 일정 불러오기
                         </Button>
                         <Modal
-                          title="Google Calendar Events"
+                          title="구글 캘린더 일정"
                           visible={isGoogleModalVisible}
                           onCancel={handleGoogleModalClose}
                           footer={null}
