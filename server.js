@@ -83,7 +83,7 @@ const sendKakaoMessage = async (accessToken, kakaoId, message) => {
 };
 
 // 매일 09시에 이벤트 확인
-schedule.scheduleJob('55 21 * * *', async () => { // 매일 09:00 AM에 실행
+schedule.scheduleJob('00 09 * * *', async () => { // 매일 09:00 AM에 실행
   console.log("09시에 이벤트 알림을 확인합니다.");
 
   const today = moment().tz('Asia/Seoul').startOf('day'); // 오늘 날짜 기준
@@ -230,13 +230,13 @@ const refreshTokens = async () => {
 };
 
 // 매일 아침 9시에 토큰 갱신 작업 스케줄링
-schedule.scheduleJob('18 14 * * *', () => {
+schedule.scheduleJob('00 09 * * *', () => {
   console.log('매일 아침 9시에 토큰 갱신 작업 실행');
   refreshTokens();
 });
 
 // 매일 자정에 실행될 작업 설정
-schedule.scheduleJob('39 00 * * *', () => {
+schedule.scheduleJob('00 00 * * *', () => {
   const today = moment().tz('Asia/Seoul').startOf('day'); // 오늘 날짜 기준
   console.log('자동 삭제 작업이 시작되었습니다:', today.format()); // 한국 시간 기준으로 출력
 
@@ -268,7 +268,7 @@ connection.connect(err => {
   // 테이블 생성
   const createTables = () => {
     const tableQueries = [
-      `CREATE TABLE IF NOT EXISTS test (
+      `CREATE TABLE IF NOT EXISTS event (
         id INT PRIMARY KEY AUTO_INCREMENT,
         kakaoId VARCHAR(20) NOT NULL,
         nickname VARCHAR(20) NOT NULL,
