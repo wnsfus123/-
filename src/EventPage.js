@@ -489,7 +489,7 @@ function EventPage() {
                             onClick={handleCopyLink} 
                             style={{  marginBottom: '10px' }} // 여백 추가
                           >
-                            🔗 일정 링크 복사
+                            🔗 모임 링크 복사
                           </Button>
                           </Col> 
                     </Row>
