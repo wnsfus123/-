@@ -54,6 +54,78 @@ app.use(session({
   }
 }));
 
+async function getMostOverlappingTimeSlotsByDates(eventUuid) {
+  const schedules = await new Promise((resolve, reject) => {
+    connection.query(
+      'SELECT kakaoId, event_datetime FROM eventschedule WHERE event_uuid = ?',
+      [eventUuid],
+      (error, results) => {
+        if (error) return reject(error);
+        resolve(results);
+      }
+    );
+  });
+
+  // 사용자별 시간대 매핑
+  const userTimeRanges = {};
+  schedules.forEach(({ kakaoId, event_datetime }) => {
+    const startTime = moment(event_datetime);
+    const endTime = startTime.clone().add(30, 'minutes');
+    const dateKey = startTime.format('YYYY-MM-DD'); // 날짜별로 그룹화
+    if (!userTimeRanges[dateKey]) userTimeRanges[dateKey] = {};
+    if (!userTimeRanges[dateKey][kakaoId]) userTimeRanges[dateKey][kakaoId] = [];
+    userTimeRanges[dateKey][kakaoId].push({ start: startTime, end: endTime });
+  });
+
+  // 날짜별 최다 겹친 시간대 계산
+  const overlappingTimeSlots = {};
+
+  Object.entries(userTimeRanges).forEach(([date, users]) => {
+    const allTimeSlots = [];
+    Object.values(users).forEach(ranges => {
+      allTimeSlots.push(...ranges);
+    });
+
+    const overlapCounts = {};
+    allTimeSlots.forEach(({ start, end }) => {
+      let currentTime = start.clone();
+      while (currentTime.isBefore(end)) {
+        const formattedTime = currentTime.format('YYYY-MM-DD HH:mm');
+        overlapCounts[formattedTime] = (overlapCounts[formattedTime] || 0) + 1;
+        currentTime.add(30, 'minutes');
+      }
+    });
+
+    let maxStartTime = null;
+    let maxEndTime = null;
+    let maxCount = 0;
+    let inMaxRange = false;
+
+    Object.entries(overlapCounts).forEach(([time, count]) => {
+      const currentTime = moment(time);
+
+      if (count > maxCount) {
+        maxCount = count;
+        maxStartTime = currentTime.clone();
+        maxEndTime = maxStartTime.clone().add(30, 'minutes');
+        inMaxRange = true;
+      } else if (count === maxCount && inMaxRange && currentTime.isSame(maxEndTime)) {
+        maxEndTime.add(30, 'minutes');
+      } else if (count < maxCount && inMaxRange) {
+        inMaxRange = false;
+      }
+    });
+
+    if (maxStartTime && maxEndTime && maxEndTime.isAfter(maxStartTime)) {
+      overlappingTimeSlots[date] = `${maxStartTime.format('YYYY-MM-DD HH:mm')} ~ ${maxEndTime.format('YYYY-MM-DD HH:mm')}`;
+    } else {
+      overlappingTimeSlots[date] = null;
+    }
+  });
+
+  return overlappingTimeSlots;
+}
+
 // KakaoTalk 메시지 보내기 함수
 const sendKakaoMessage = async (accessToken, kakaoId, message) => {
   try {
@@ -76,14 +148,12 @@ const sendKakaoMessage = async (accessToken, kakaoId, message) => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
-    console.log(`${kakaoId}에게 메시지 전송 성공`);
   } catch (error) {
     console.error('메시지 전송 실패:', error);
   }
 };
 
-// 매일 09시에 이벤트 확인
-schedule.scheduleJob('00 09 * * *', async () => { // 매일 09:00 AM에 실행
+schedule.scheduleJob('35 03 * * *', async () => { // 매일 09:00 AM에 실행
   console.log("09시에 이벤트 알림을 확인합니다.");
 
   const today = moment().tz('Asia/Seoul').startOf('day'); // 오늘 날짜 기준
@@ -91,9 +161,9 @@ schedule.scheduleJob('00 09 * * *', async () => { // 매일 09:00 AM에 실행
   const oneDayAfter = today.clone().add(1, 'days').format('YYYY-MM-DD');
 
   try {
-     // 3일 후 알람 보낼 이벤트
-     const threeDaysEvents = await new Promise((resolve, reject) => {
-      connection.query(`SELECT kakaoId, eventname FROM test WHERE DATE(startday) = ?`, [threeDaysAfter], (error, results) => {
+    // 3일 후 알람 보낼 이벤트
+    const threeDaysEvents = await new Promise((resolve, reject) => {
+      connection.query(`SELECT kakaoId, eventname, uuid FROM test WHERE DATE(startday) = ?`, [threeDaysAfter], (error, results) => {
         if (error) return reject(error);
         resolve(results);
       });
@@ -101,52 +171,150 @@ schedule.scheduleJob('00 09 * * *', async () => { // 매일 09:00 AM에 실행
 
     // 1일 후 알람 보낼 이벤트
     const oneDayEvents = await new Promise((resolve, reject) => {
-      connection.query(`SELECT kakaoId, eventname FROM test WHERE DATE(startday) = ?`, [oneDayAfter], (error, results) => {
+      connection.query(`SELECT kakaoId, eventname, uuid FROM test WHERE DATE(startday) = ?`, [oneDayAfter], (error, results) => {
         if (error) return reject(error);
         resolve(results);
       });
     });
 
     // 3일 전 알림 보내기
-    for (const { kakaoId, eventname } of threeDaysEvents) {
-      // tokens 테이블에서 accessToken 조회
+    for (const { kakaoId, eventname, uuid } of threeDaysEvents) {
+      const overlappingTimeSlots = await getMostOverlappingTimeSlotsByDates(uuid);
+
+      // 이벤트 생성자에게 메시지 보내기
       const tokens = await new Promise((resolve, reject) => {
-        connection.query(
-          `SELECT accessToken FROM tokens WHERE kakaoId = ?`,
-          [kakaoId],
-          (error, results) => {
-            if (error) return reject(error);
-            resolve(results);
-          }
-        );
+        connection.query(`SELECT accessToken FROM tokens WHERE kakaoId = ?`, [kakaoId], (error, results) => {
+          if (error) return reject(error);
+          resolve(results);
+        });
       });
 
       if (tokens.length > 0) {
         const accessToken = decrypt(tokens[0].accessToken); // 복호화
-        const message = `모일까에서 ${eventname} 모임이 3일 남았어요! 얼른 일정을 등록하고 확인해주세요!`;
+        const mostOverlappingMessages = Object.entries(overlappingTimeSlots)
+          .map(([date, timeSlot]) => {
+            const timeOnly = timeSlot.split(' ~ ').map(time => moment(time).format('HH:mm')).join(' ~ ');
+            return `${date}: ${timeOnly}`;
+          })
+          .join('\n');
+
+          // 겹치는 시간이 없으면 기본 메시지 추가
+        const finalMessage = mostOverlappingMessages.length > 0
+        ? `📅 현재 가장 많이 겹치는 일정은 다음과 같습니다:\n${mostOverlappingMessages}`
+        : `📅 현재 겹치는 시간이 없습니다. 다른 참여자들과 일정을 조율해 주세요!`;
+
+        const message = `안녕하세요! 😊\n\n모일까에서 "${eventname}" 모임이 3일 앞으로 다가왔습니다!\n\n${finalMessage}\n\n모두가 참여하기 좋은 시간에 일정을 등록해 주세요! 🚀`;
         await sendKakaoMessage(accessToken, kakaoId, message);
+        console.log(`생성자:${kakaoId}에게 메시지 전송 성공`);
+      }
+
+      // 참여자들에게 메시지 보내기
+      const participantKakaoIds = await new Promise((resolve, reject) => {
+        connection.query(`SELECT DISTINCT kakaoId FROM eventschedule WHERE event_uuid = ?`, [uuid], (error, results) => {
+          if (error) return reject(error);
+          resolve(results);
+        });
+      });
+
+      for (const { kakaoId: participantKakaoId } of participantKakaoIds) {
+        if (participantKakaoId !== kakaoId) {  // 생성자 제외
+          const tokens = await new Promise((resolve, reject) => {
+            connection.query(`SELECT accessToken FROM tokens WHERE kakaoId = ?`, [participantKakaoId], (error, results) => {
+              if (error) return reject(error);
+              resolve(results);
+            });
+          });
+
+        if (tokens.length > 0) {
+          const accessToken = decrypt(tokens[0].accessToken); // 복호화
+          const mostOverlappingMessages = Object.entries(overlappingTimeSlots)
+          .map(([date, timeSlot]) => {
+            const timeOnly = timeSlot.split(' ~ ').map(time => moment(time).format('HH:mm')).join(' ~ ');
+            return `${date}: ${timeOnly}`;
+          })
+          .join('\n');
+
+          // 겹치는 시간이 없으면 기본 메시지 추가
+          const finalMessage = mostOverlappingMessages.length > 0
+          ? `📅 현재 가장 많이 겹치는 일정은 다음과 같습니다:\n${mostOverlappingMessages}`
+          : `📅 현재 겹치는 시간이 없습니다. 다른 참여자들과 일정을 조율해 주세요!`;
+
+          const message = `안녕하세요! 😊\n\n"${eventname}" 모임이 3일 앞으로 다가왔습니다!\n\n${finalMessage}\n\n모두가 참여하기 좋은 시간에 일정을 등록해 주세요! 🚀`;
+          await sendKakaoMessage(accessToken, kakaoId, message);
+          console.log(`참여자:${participantKakaoId}에게 메시지 전송 성공`);
+        }
+      }
       }
     }
 
     // 1일 전 알림 보내기
-    for (const { kakaoId, eventname } of oneDayEvents) {
-      // tokens 테이블에서 accessToken 조회
+    for (const { kakaoId, eventname, uuid } of oneDayEvents) {
+      const overlappingTimeSlots = await getMostOverlappingTimeSlotsByDates(uuid);
+
+      // 이벤트 생성자에게 메시지 보내기
       const tokens = await new Promise((resolve, reject) => {
-        connection.query(
-          `SELECT accessToken FROM tokens WHERE kakaoId = ?`,
-          [kakaoId],
-          (error, results) => {
-            if (error) return reject(error);
-            resolve(results);
-          }
-        );
+        connection.query(`SELECT accessToken FROM tokens WHERE kakaoId = ?`, [kakaoId], (error, results) => {
+          if (error) return reject(error);
+          resolve(results);
+        });
       });
 
       if (tokens.length > 0) {
         const accessToken = decrypt(tokens[0].accessToken); // 복호화
-        const message = `모일까에서 ${eventname} 모임이 1일 남았어요! 얼른 일정을 등록하고 확인해주세요!`;
+        const mostOverlappingMessages = Object.entries(overlappingTimeSlots)
+          .map(([date, timeSlot]) => {
+            const timeOnly = timeSlot.split(' ~ ').map(time => moment(time).format('HH:mm')).join(' ~ ');
+            return `${date}: ${timeOnly}`;
+          })
+          .join('\n');
+
+          // 겹치는 시간이 없으면 기본 메시지 추가
+          const finalMessage = mostOverlappingMessages.length > 0
+          ? `📅 현재 가장 많이 겹치는 일정은 다음과 같습니다:\n${mostOverlappingMessages}`
+          : `📅 현재 겹치는 시간이 없습니다. 다른 참여자들과 일정을 조율해 주세요!`;
+
+        const message = `안녕하세요! 😊\n\n모일까에서 "${eventname}" 모임이 바로 **내일**이에요! ⏰\n\n${finalMessage}\n\n아직 참여 일정 등록을 못 하셨다면 서둘러 확인해 주세요! 🚀`;
         await sendKakaoMessage(accessToken, kakaoId, message);
+        console.log(`생성자:${kakaoId}에게 메시지 전송 성공`);
       }
+
+      // 참여자들에게 메시지 보내기
+      const participantKakaoIds = await new Promise((resolve, reject) => {
+        connection.query(`SELECT DISTINCT kakaoId FROM eventschedule WHERE event_uuid = ?`, [uuid], (error, results) => {
+          if (error) return reject(error);
+          resolve(results);
+        });
+      });
+
+      for (const { kakaoId: participantKakaoId } of participantKakaoIds) {
+        if (participantKakaoId !== kakaoId) {  // 생성자 제외
+          const tokens = await new Promise((resolve, reject) => {
+            connection.query(`SELECT accessToken FROM tokens WHERE kakaoId = ?`, [participantKakaoId], (error, results) => {
+              if (error) return reject(error);
+              resolve(results);
+            });
+          });
+
+        if (tokens.length > 0) {
+          const accessToken = decrypt(tokens[0].accessToken); // 복호화
+          const mostOverlappingMessages = Object.entries(overlappingTimeSlots)
+          .map(([date, timeSlot]) => {
+            const timeOnly = timeSlot.split(' ~ ').map(time => moment(time).format('HH:mm')).join(' ~ ');
+            return `${date}: ${timeOnly}`;
+          })
+          .join('\n');
+
+          // 겹치는 시간이 없으면 기본 메시지 추가
+          const finalMessage = mostOverlappingMessages.length > 0
+          ? `📅 현재 가장 많이 겹치는 일정은 다음과 같습니다:\n${mostOverlappingMessages}`
+          : `📅 현재 겹치는 시간이 없습니다. 다른 참여자들과 일정을 조율해 주세요!`;
+          
+          const message = `안녕하세요! 😊\n\n"${eventname}" 모임이 바로 **내일**이에요! ⏰\n\n${finalMessage}\n\n아직 참여 일정 등록을 못 하셨다면 서둘러 확인해 주세요! 🚀`;
+          await sendKakaoMessage(accessToken, kakaoId, message);
+          console.log(`참여자:${participantKakaoId}에게 메시지 전송 성공`);
+        }
+      }
+    }
     }
   } catch (error) {
     console.error('이벤트 조회 중 오류 발생:', error);
